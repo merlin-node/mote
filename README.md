@@ -113,12 +113,27 @@ services:
     container_name: mote-zk
     restart: unless-stopped
     ports:
-      - "1888:1888"
+      - "127.0.0.1:1888:1888"
     volumes:
       - ./data/config:/etc/zk
       - ./data/db:/var/lib/zk
     environment:
       - TZ=Asia/Shanghai
+```
+
+#### 更新到新版本
+
+```bash
+docker compose pull          # 拉取最新镜像
+docker compose up -d         # 重启容器（不停机拉取完直接换）
+```
+
+#### 修改 docker-compose.yml（如换端口等）
+
+```bash
+nano docker-compose.yml      # 编辑文件（方向键移动，改完 Ctrl+X → Y → 回车保存）
+docker compose down          # 停止旧容器
+docker compose up -d         # 用新配置启动
 ```
 
 ### 方式二：Docker 一行启动
