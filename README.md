@@ -131,8 +131,8 @@ services:
 #### 更新到新版本
 
 ```bash
-docker compose pull          # 拉取最新镜像
-docker compose up -d         # 重启容器（不停机拉取完直接换）
+docker compose pull                        # 拉取最新镜像
+docker compose up -d --force-recreate      # 强制重建容器（用新镜像替换旧容器）
 ```
 
 #### 修改 docker-compose.yml（如换端口等）
