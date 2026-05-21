@@ -1,0 +1,12 @@
+services:
+  zk:
+    image: ghcr.io/merlin-node/mote:latest
+    container_name: mote-zk
+    restart: unless-stopped
+    ports:
+      - "25774:25774"
+    volumes:
+      - ./data/config:/etc/zk
+      - ./data/db:/var/lib/zk
+    environment:
+      - TZ=Asia/Shanghai

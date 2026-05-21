@@ -1,0 +1,6 @@
+dist/
+_data/
+.gomodcache/
+mote-tasks-for-claude-code/
+data/
+*.db
