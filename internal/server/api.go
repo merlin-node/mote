@@ -86,6 +86,7 @@ func (a *API) Routes() http.Handler {
 	mux.HandleFunc("/api/logout", a.handleLogout)
 	mux.HandleFunc("/api/whoami", a.handleWhoAmI)
 	mux.HandleFunc("/api/change-password", a.handleChangePassword)
+	mux.HandleFunc("/api/change-username", a.handleChangeUsername)
 
 	// 通知渠道
 	mux.HandleFunc("/api/notifiers", a.handleNotifiers)         // GET 列表 / POST 创建
@@ -794,6 +795,46 @@ func (a *API) handleChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 清空所有 session,强制重新登录
+	a.auth.revokeAll()
+	writeJSONResp(w, map[string]bool{"ok": true})
+}
+
+// handleChangeUsername 修改管理员用户名，改后清空所有 session
+func (a *API) handleChangeUsername(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if !loggedIn(r) {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	var req struct {
+		Password string `json:"password"` // 需要验证当前密码
+		New      string `json:"new"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad json", http.StatusBadRequest)
+		return
+	}
+	if !constantTimeEqualString(req.Password, a.cfg.AdminPassword) {
+		http.Error(w, "密码不正确", http.StatusUnauthorized)
+		return
+	}
+	newName := strings.TrimSpace(req.New)
+	if newName == "" {
+		http.Error(w, "用户名不能为空", http.StatusBadRequest)
+		return
+	}
+	if len(newName) > 64 {
+		http.Error(w, "用户名过长（最多 64 字符）", http.StatusBadRequest)
+		return
+	}
+	a.cfg.AdminUsername = newName
+	if err := a.cfg.Save(); err != nil {
+		httpError(w, err)
+		return
+	}
 	a.auth.revokeAll()
 	writeJSONResp(w, map[string]bool{"ok": true})
 }

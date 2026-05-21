@@ -43,6 +43,8 @@ func main() {
 		cmdStatus()
 	case "uninstall":
 		cmdUninstall()
+	case "update":
+		cmdUpdate()
 	case "version":
 		fmt.Println("zk version", shared.Version)
 	case "-h", "--help", "help":
@@ -64,6 +66,7 @@ Commands:
   stop         Stop the service
   restart      Restart the service
   status       Show service status and panel URL
+  update       Update to the latest release (auto rollback on failure)
   uninstall    Uninstall (stop service, remove files)
   version      Show version`)
 }
@@ -246,10 +249,11 @@ func showMenu() {
 		fmt.Println("  [2] 启动")
 		fmt.Println("  [3] 停止")
 		fmt.Println("  [4] 重启")
-		fmt.Println("  [5] 卸载")
+		fmt.Println("  [5] 更新到最新版本")
+		fmt.Println("  [6] 卸载")
 		fmt.Println("  [0] 退出")
 		fmt.Println()
-		fmt.Print("  选择 [0-5]: ")
+		fmt.Print("  选择 [0-6]: ")
 		r := bufio.NewReader(os.Stdin)
 		line, _ := r.ReadString('\n')
 		switch strings.TrimSpace(line) {
@@ -262,6 +266,8 @@ func showMenu() {
 		case "4":
 			cmdSystemctl("restart", "zk")
 		case "5":
+			cmdUpdate()
+		case "6":
 			cmdUninstall()
 			return
 		case "0", "":

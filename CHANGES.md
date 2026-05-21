@@ -2,6 +2,51 @@
 
 ---
 
+# v2.4 一键更新 + 迁移种子 + 用户名修改（2026-05）
+
+## `zk update` 一键更新 + 自动回滚
+
+新文件 `cmd/zk/update.go`，新增 `cmdUpdate()` 函数：
+
+1. 调用 GitHub Releases API（`/repos/merlin-node/mote/releases/latest`）查询最新 tag
+2. 与当前 `shared.Version` 对比，已是最新则提示并退出
+3. 根据 `runtime.GOARCH` 选择对应平台二进制（`zk-linux-amd64` / `zk-linux-arm64`）
+4. 下载到临时文件，同步计算 SHA256 并打印
+5. 备份旧二进制为 `<exePath>.bak`
+6. `chmod 0755` + 原子 `rename` 替换
+7. `systemctl restart zk`，等待 3 秒，循环最多 3 次健康检查（GET `/api/config` with Basic Auth）
+8. 健康检查通过 → 删除备份；失败 → 从备份还原并重启
+
+`cmd/zk/main.go` 改动：
+- `switch os.Args[1]` 新增 `case "update"` 调用 `cmdUpdate()`
+- `printUsage()` 补充 `update` 说明
+- 交互菜单选项 `[5] 更新到最新版本`（原 5=卸载 移至 6）
+
+## 管理员用户名修改
+
+`internal/server/api.go` 新增：
+- 路由 `POST /api/change-username`
+- 请求体：`{ "password": "<当前密码>", "new": "<新用户名>" }`
+- 验证：current password 正确 + 新用户名非空 + 长度 ≤ 64 字符（允许 `@`、`#` 等所有可打印字符）
+- 成功后更新 `cfg.AdminUsername`、写盘、`revokeAll()` 吊销所有 session（强制重新登录）
+
+前端（`internal/server/web/index.html`）设置弹窗新增"改用户名"区块（待下一步完成）。
+
+## 迁移种子机制（待完成）
+
+`internal/shared/protocol.go` 将新增 `MigrationPayload`（`new_url`、`fallback_after`、`hmac`）。
+
+被控 `internal/agent/`:
+- `config.go` 新增 `MigrationURL`、`MigrationFallbackAfter` 字段
+- `runner.go` 收到 `migration` 消息后验证 HMAC → 写入 config；断联超时后自动切换新地址并清除迁移记录
+
+主控 `internal/server/`:
+- `hub.go` 新增 `BroadcastMigration(newURL string)`
+- `api.go` 新增 `POST /api/migrate`，需登录，body `{ "new_url": "wss://..." }`
+- 面板设置弹窗新增"迁移"入口
+
+---
+
 # v2.3 分布式拨测 + 节点详情弹窗 + UI 全面升级（2026-05）
 
 ## 分布式网络拨测（probe）
