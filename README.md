@@ -89,14 +89,21 @@ make run-zk
 # 1. 下载 compose 文件
 curl -fsSL https://raw.githubusercontent.com/merlin-node/mote/main/docker-compose.yml -o docker-compose.yml
 
-# 2. 启动
+# 2. 放入被控二进制（主控用来分发给小鸡的安装脚本需要它）
+mkdir -p ./data/db/dist
+# 从 GitHub Releases 下载，或自行编译后 cp 过来
+curl -fsSL https://github.com/merlin-node/mote/releases/download/v2.2/bk-linux-amd64 -o ./data/db/dist/bk-linux-amd64
+curl -fsSL https://github.com/merlin-node/mote/releases/download/v2.2/bk-linux-arm64  -o ./data/db/dist/bk-linux-arm64
+chmod +x ./data/db/dist/bk-linux-*
+
+# 3. 启动
 docker compose up -d
 
-# 3. 查看初始密码
+# 4. 查看初始密码
 docker logs mote-zk 2>&1 | grep -E "admin (user|pass)"
 ```
 
-compose 默认把配置挂载到 `./data/config`，数据库挂载到 `./data/db`。
+compose 默认把配置挂载到 `./data/config`，数据库和被控二进制挂载到 `./data/db`。
 `docker-compose.yml` 完整内容：
 
 ```yaml
@@ -169,6 +176,8 @@ server {
 ```
 
 ### 被控安装
+
+被控（bk）**不走 Docker**，直接以 systemd 服务安装在被监控的机器上。
 
 在面板上"+ 添加节点"创建节点，得到安装命令：
 
