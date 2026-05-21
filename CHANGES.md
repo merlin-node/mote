@@ -1,5 +1,27 @@
 # mote — 修改记录
 
+---
+
+# v2.2 Docker 支持 + 端口统一（2026-05）
+
+## 默认监听端口改为 1888
+
+`internal/server/config.go` `applyDefaults()` 中默认端口从 `:25774` 改为 `:1888`。
+同步更新 `scripts/install-zk.sh` 回退端口、README 及设计文档全部引用。
+
+## Docker 支持
+
+- 新增 `Dockerfile`：多阶段构建，`golang:1.22-alpine` 编译，`debian:12-slim` 运行，纯 Go 无 CGO，支持 `linux/amd64` / `linux/arm64`。
+- 新增 `docker-compose.yml`：端口绑定 `127.0.0.1:1888:1888`（仅本机可达），配置/数据目录挂载为 `./data/config` / `./data/db`。
+- 新增 `.github/workflows/docker.yml`：推送 `v*` tag 时自动构建多架构镜像并推送至 `ghcr.io/merlin-node/mote`。
+- 新增 `.github/workflows/release.yml`：推送 `v*` tag 时自动编译 `zk` / `bk` 四个平台二进制并发布到 GitHub Releases。
+- Docker 部署下 `zk` 命令通过 `docker exec -it mote-zk zk` 调用，建议在宿主机添加 alias：
+  ```bash
+  echo "alias zk='docker exec -it mote-zk zk'" >> ~/.bashrc && source ~/.bashrc
+  ```
+
+---
+
 基于原 `probe` 项目重构。本次改动只动 Go 代码与脚本,不改架构、协议、表结构。
 
 ## 1. 重命名
