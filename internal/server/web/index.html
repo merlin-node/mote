@@ -5,213 +5,204 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>mote 监控面板</title>
 <style>
-  :root, :root[data-theme="dark"] {
-    --bg: #0f1419;
-    --panel: #1a1f2e;
-    --panel-2: #232a3d;
-    --border: #2a334a;
-    --text: #e4e8f0;
-    --text-dim: #8b95a8;
-    --accent: #4f8cff;
-    --green: #4ade80;
-    --yellow: #fbbf24;
-    --orange: #fb923c;
-    --red: #f87171;
-    --gray: #6b7280;
-  }
-  :root[data-theme="light"] {
-    --bg: #f6f8fa;
-    --panel: #ffffff;
-    --panel-2: #f0f2f5;
-    --border: #d0d7de;
-    --text: #1c2128;
-    --text-dim: #656d76;
-    --accent: #0969da;
-    --green: #1a7f37;
-    --yellow: #9a6700;
-    --orange: #bc4c00;
-    --red: #cf222e;
-    --gray: #6e7781;
-  }
-  :root[data-theme="blue"] {
-    --bg: #0a1929;
-    --panel: #0d2137;
-    --panel-2: #102a43;
-    --border: #1e3a5a;
-    --text: #d0e8ff;
-    --text-dim: #7aabcc;
-    --accent: #1976d2;
-    --green: #4ade80;
-    --yellow: #fbbf24;
-    --orange: #fb923c;
-    --red: #f87171;
-    --gray: #5a7a9a;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-         background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
-  header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px;
-           background: var(--panel); border-bottom: 1px solid var(--border); }
-  header h1 { margin: 0; font-size: 18px; font-weight: 600; cursor: pointer; user-select: none; }
-  header h1:hover { color: var(--accent); }
-  header .stats { font-size: 13px; color: var(--text-dim); }
-  .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
-  .toolbar { display: flex; gap: 12px; margin-bottom: 20px; }
-  button, .btn { background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
-                 padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px;
-                 font-family: inherit; transition: background 0.15s; }
-  button:hover { background: #2d3548; }
-  button.primary { background: var(--accent); border-color: var(--accent); }
-  button.primary:hover { background: #3a78f0; }
-  button.danger { background: transparent; border-color: var(--red); color: var(--red); }
-  button.danger:hover { background: rgba(248, 113, 113, 0.1); }
+:root,[data-theme="dark"]{--bg:#0f1419;--panel:#1a1f2e;--panel-2:#232a3d;--border:#2a334a;--text:#e4e8f0;--text-dim:#8b95a8;--accent:#4f8cff;--green:#4ade80;--yellow:#fbbf24;--orange:#fb923c;--red:#f87171;--gray:#6b7280;--shadow:0 4px 24px rgba(0,0,0,.4)}
+[data-theme="light"]{--bg:#f0f2f5;--panel:#fff;--panel-2:#f6f8fa;--border:#d0d7de;--text:#1c2128;--text-dim:#656d76;--accent:#0969da;--green:#1a7f37;--yellow:#9a6700;--orange:#bc4c00;--red:#cf222e;--gray:#6e7781;--shadow:0 4px 24px rgba(0,0,0,.08)}
+[data-theme="blue"]{--bg:#071523;--panel:#0d2137;--panel-2:#102a43;--border:#1e3a5a;--text:#d0e8ff;--text-dim:#7aabcc;--accent:#1976d2;--green:#4ade80;--yellow:#fbbf24;--orange:#fb923c;--red:#f87171;--gray:#5a7a9a;--shadow:0 4px 24px rgba(0,0,0,.5)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
-  .node { background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-          padding: 16px; transition: transform 0.1s, border-color 0.15s; cursor: pointer; }
-  .node:hover { border-color: #3a4560; }
-  .node.offline { opacity: 0.5; }
-  .node-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-  .node-name { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray); }
-  .dot.online { background: var(--green); box-shadow: 0 0 8px rgba(74, 222, 128, 0.5); }
-  .node-note { color: var(--text-dim); font-size: 12px; white-space: pre-line; margin: 4px 0 10px; }
+/* Header */
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;gap:12px}
+header h1{margin:0;font-size:17px;font-weight:700;cursor:pointer;user-select:none;letter-spacing:-.3px;white-space:nowrap}
+header h1:hover{color:var(--accent)}
+.header-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.header-stats{font-size:12px;color:var(--text-dim);white-space:nowrap}
+.theme-btns{display:flex;gap:5px}
+.theme-dot{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .15s}
+.theme-dot:hover,.theme-dot.active{border-color:var(--text)}
 
-  .metric-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 12px; }
-  .metric-row .label { width: 50px; color: var(--text-dim); }
-  .metric-row .bar { flex: 1; height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; }
-  .metric-row .bar > div { height: 100%; background: var(--accent); transition: width 0.4s; }
-  .metric-row .val { width: 80px; text-align: right; color: var(--text); font-variant-numeric: tabular-nums; }
-  .bar > div.warn { background: var(--yellow); }
-  .bar > div.danger { background: var(--red); }
+/* Container */
+.container{max-width:1440px;margin:0 auto;padding:20px 24px}
+.toolbar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
+button,.btn{background:var(--panel-2);color:var(--text);border:1px solid var(--border);padding:7px 14px;border-radius:7px;cursor:pointer;font-size:13px;font-family:inherit;transition:background .15s,box-shadow .15s;display:inline-flex;align-items:center;gap:5px}
+button:hover{background:var(--border)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{opacity:.88}
+button.danger{background:transparent;border-color:var(--red);color:var(--red)}
+button.danger:hover{background:rgba(248,113,113,.1)}
+button.sm{padding:4px 10px;font-size:12px}
 
-  .node-foot { display: flex; justify-content: space-between; margin-top: 12px; padding-top: 12px;
-               border-top: 1px solid var(--border); font-size: 12px; color: var(--text-dim); }
-  .billing { color: var(--text); }
-  .due-soon { color: var(--orange); }
-  .due-very-soon { color: var(--red); }
+/* Grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
 
-  .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none;
-                align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-  .modal-mask.show { display: flex; }
-  .modal { background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-           padding: 24px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
-  .modal h2 { margin-top: 0; font-size: 16px; }
-  .modal h3 { font-size: 14px; }
-  .field { margin: 12px 0; }
-  .field label { display: block; color: var(--text-dim); font-size: 12px; margin-bottom: 4px; }
-  .field input, .field select, .field textarea {
-    width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
-    padding: 8px 10px; border-radius: 6px; font-family: inherit; font-size: 13px;
-  }
-  .field textarea { resize: vertical; min-height: 80px; }
-  .field-row { display: flex; gap: 12px; flex-wrap: wrap; }
-  .field-row .field { flex: 1; min-width: 120px; }
-  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap; }
-  .pre-cmd { background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 6px;
-             font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace; font-size: 12px;
-             white-space: pre-wrap; word-break: break-all; }
-  .empty { text-align: center; padding: 60px; color: var(--text-dim); }
-  .empty h3 { color: var(--text); }
-  .header-right { display:flex; align-items:center; gap:12px; }
-  .login-mask { position: fixed; inset: 0; background: rgba(8,12,18,0.88); display: none;
-                align-items: center; justify-content: center; z-index: 200; padding: 20px; }
-  .login-mask.show { display:flex; }
-  .login-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-                width: 100%; max-width: 420px; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
-  .login-card h2 { margin: 0 0 8px; font-size: 20px; }
-  .login-card p { margin: 0 0 18px; color: var(--text-dim); font-size: 13px; }
-  .login-error { color: var(--red); font-size: 12px; min-height: 18px; margin-top: 8px; }
-  .probe-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
-  .probe-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
-  .probe-card h4 { margin: 0 0 8px; font-size: 12px; color: var(--text-dim); font-weight: 600; }
-  .chart { width: 100%; height: 140px; display:block; }
-  .chart-meta { margin-top: 6px; font-size: 12px; color: var(--text-dim); }
-  .login-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim);
-               padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit; }
-  .login-btn:hover { border-color: var(--accent); color: var(--text); }
-  .login-popup { position: fixed; top: 60px; right: 24px; background: var(--panel);
-                 border: 1px solid var(--border); border-radius: 10px; padding: 20px;
-                 width: 300px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 300; display: none; }
-  .login-popup.show { display: block; }
-  .login-popup h3 { margin: 0 0 14px; font-size: 15px; }
-  .login-error { color: var(--red); font-size: 12px; min-height: 16px; margin-top: 6px; }
-  .auth-required { display: none; }
-  .logged-in .auth-required { display: inline-flex; }
-  .tag { display: inline-block; background: var(--panel-2); border: 1px solid var(--border);
-         border-radius: 10px; padding: 1px 8px; font-size: 11px; color: var(--text-dim); margin: 2px; }
-  .theme-btns { display: flex; gap: 6px; align-items: center; }
-  .theme-dot { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 2px solid transparent;
-               transition: border-color 0.15s; }
-  .theme-dot:hover, .theme-dot.active { border-color: var(--text); }
-  .settings-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
-  .settings-tab { padding: 8px 16px; cursor: pointer; font-size: 13px; color: var(--text-dim);
-                  border-bottom: 2px solid transparent; margin-bottom: -1px; }
-  .settings-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .settings-panel { display: none; }
-  .settings-panel.active { display: block; }
-  .history-section { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; }
-  .history-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
-  .history-tab { padding: 4px 10px; font-size: 12px; border-radius: 4px; cursor: pointer;
-                 background: var(--panel-2); border: 1px solid var(--border); color: var(--text-dim); }
-  .history-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .history-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .history-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
-  .history-card h4 { margin: 0 0 8px; font-size: 12px; color: var(--text-dim); }
-  @media (max-width: 640px) {
-    header { padding: 12px 16px; }
-    header h1 { font-size: 15px; }
-    .container { padding: 12px; }
-    .toolbar { flex-wrap: wrap; gap: 8px; }
-    .grid { grid-template-columns: 1fr; gap: 10px; }
-    .node { padding: 12px; }
-    .probe-grid { grid-template-columns: 1fr; }
-    .header-right { gap: 8px; }
-    .login-popup { right: 8px; width: calc(100vw - 32px); max-width: 320px; }
-    .modal { padding: 16px; }
-    .field-row { flex-direction: column; }
-    .field-row .field { flex: none; }
-  }
+/* Node card */
+.node{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:transform .12s,border-color .15s,box-shadow .15s;position:relative;overflow:hidden}
+.node:hover{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent), var(--shadow);transform:translateY(-1px)}
+.node.offline{opacity:.55}
+.node-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.node-name{font-weight:700;font-size:14px;display:flex;align-items:center;gap:7px}
+.node-os{font-size:11px;color:var(--text-dim);background:var(--panel-2);border:1px solid var(--border);padding:1px 7px;border-radius:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--gray);flex-shrink:0}
+.dot.online{background:var(--green);box-shadow:0 0 0 3px rgba(74,222,128,.2)}
+.dot.online.pulse{animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(74,222,128,.2)}50%{box-shadow:0 0 0 5px rgba(74,222,128,.08)}}
+.node-note{color:var(--text-dim);font-size:12px;white-space:pre-line;margin:0 0 10px;line-height:1.4}
+.tag{display:inline-block;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:1px 7px;font-size:11px;color:var(--text-dim);margin:2px 2px 2px 0}
+.tags{margin:4px 0 10px}
+
+/* Metric rows */
+.metric-row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:12px}
+.metric-row .label{width:44px;color:var(--text-dim);flex-shrink:0}
+.metric-row .bar{flex:1;height:5px;background:var(--panel-2);border-radius:3px;overflow:hidden}
+.metric-row .bar>div{height:100%;background:var(--accent);border-radius:3px;transition:width .4s}
+.bar>div.warn{background:var(--yellow)}
+.bar>div.danger{background:var(--red)}
+.metric-row .val{width:86px;text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}
+.net-row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:12px;color:var(--text-dim)}
+.net-row .label{width:44px;flex-shrink:0}
+.node-foot{display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim)}
+.billing{color:var(--text)}
+.due-soon{color:var(--orange)}
+.due-very-soon{color:var(--red)}
+
+/* Modal base */
+.modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:100;padding:16px;overflow-y:auto}
+.modal-mask.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow)}
+.modal h2{margin:0 0 16px;font-size:16px;font-weight:700}
+.modal h3{font-size:13px;font-weight:600;margin:18px 0 10px;color:var(--text)}
+.field{margin:11px 0}
+.field label{display:block;color:var(--text-dim);font-size:12px;margin-bottom:4px;font-weight:500}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:7px;font-family:inherit;font-size:13px;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:70px}
+.field-row{display:flex;gap:12px;flex-wrap:wrap}
+.field-row .field{flex:1;min-width:110px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+.pre-cmd{background:var(--bg);border:1px solid var(--border);padding:12px;border-radius:7px;font-family:ui-monospace,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;color:var(--green)}
+.empty{text-align:center;padding:60px 20px;color:var(--text-dim)}
+.empty h3{color:var(--text);margin-bottom:8px;font-size:15px}
+
+/* Login */
+.login-popup{position:fixed;top:58px;right:20px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;width:300px;box-shadow:var(--shadow);z-index:300;display:none}
+.login-popup.show{display:block}
+.login-popup h3{margin:0 0 14px;font-size:15px;font-weight:700}
+.login-error{color:var(--red);font-size:12px;min-height:16px;margin-top:6px}
+.login-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:6px 14px;border-radius:7px;cursor:pointer;font-size:13px;font-family:inherit;transition:border-color .15s,color .15s}
+.login-btn:hover{border-color:var(--accent);color:var(--text)}
+.auth-required{display:none}
+.logged-in .auth-required{display:inline-flex}
+
+/* Settings tabs */
+.settings-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto}
+.settings-tab{padding:8px 14px;cursor:pointer;font-size:13px;color:var(--text-dim);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.settings-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.settings-panel{display:none}
+.settings-panel.active{display:block}
+
+/* Charts */
+.chart{width:100%;display:block}
+.chart-meta{margin-top:5px;font-size:11px;color:var(--text-dim)}
+.probe-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.probe-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px}
+.probe-card h4{margin:0 0 7px;font-size:12px;color:var(--text-dim);font-weight:600}
+.history-tabs{display:flex;gap:5px;margin-bottom:10px}
+.history-tab{padding:3px 9px;font-size:12px;border-radius:5px;cursor:pointer;background:var(--panel-2);border:1px solid var(--border);color:var(--text-dim);transition:background .15s}
+.history-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.history-charts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.history-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px}
+.history-card h4{margin:0 0 7px;font-size:12px;color:var(--text-dim);font-weight:600}
+.history-section{margin-top:18px;border-top:1px solid var(--border);padding-top:14px}
+
+/* ===== DETAIL POPUP ===== */
+.detail-modal{max-width:920px;padding:0;overflow:hidden;display:flex;flex-direction:column}
+.detail-hdr{display:flex;align-items:flex-start;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap}
+.detail-hdr-left{display:flex;flex-direction:column;gap:6px}
+.detail-title{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700}
+.detail-sub{font-size:12px;color:var(--text-dim)}
+.detail-hdr-right{display:flex;gap:8px;flex-shrink:0;align-items:center}
+.detail-body{display:grid;grid-template-columns:280px 1fr;overflow:hidden;max-height:calc(90vh - 110px)}
+.detail-left{padding:18px;overflow-y:auto;border-right:1px solid var(--border)}
+.detail-right{padding:18px;overflow-y:auto}
+.detail-section{margin-bottom:16px}
+.detail-section-title{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin-bottom:8px;font-weight:600}
+.detail-info-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border)}
+.detail-info-row:last-child{border-bottom:none}
+.detail-info-label{color:var(--text-dim)}
+.detail-info-val{color:var(--text);font-weight:500;text-align:right}
+.val-green{color:var(--green)}
+.val-yellow{color:var(--yellow)}
+.val-red{color:var(--red)}
+
+/* Probe management */
+.probe-target-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px}
+.probe-target-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.probe-target-name{font-weight:600;font-size:13px}
+.probe-badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600;margin-right:4px}
+.probe-badge.icmp{background:rgba(79,140,255,.15);color:var(--accent)}
+.probe-badge.tcp{background:rgba(74,222,128,.15);color:var(--green)}
+.probe-result-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-top:12px}
+.probe-result-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px}
+.probe-result-card h4{font-size:12px;color:var(--text-dim);margin-bottom:8px;font-weight:600}
+
+/* Responsive */
+@media(max-width:768px){
+  header{padding:12px 16px}
+  header h1{font-size:15px}
+  .container{padding:12px 14px}
+  .toolbar{gap:7px}
+  .grid{grid-template-columns:1fr;gap:10px}
+  .node{padding:14px}
+  .header-stats{display:none}
+  .probe-grid{grid-template-columns:1fr}
+  .history-charts{grid-template-columns:1fr}
+  .field-row{flex-direction:column}
+  .field-row .field{flex:none}
+  .login-popup{right:8px;width:calc(100vw - 32px);max-width:300px}
+  .detail-modal{max-width:100%;border-radius:0}
+  .detail-body{grid-template-columns:1fr;max-height:none}
+  .detail-left{border-right:none;border-bottom:1px solid var(--border);padding:14px}
+  .detail-right{padding:14px}
+  .modal-mask{padding:0;align-items:flex-end}
+  .modal{border-radius:14px 14px 0 0;max-height:95vh}
+  .probe-result-grid{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+  .toolbar button span{display:none}
+  button{padding:7px 10px}
+}
 </style>
 </head>
 <body>
-<!-- 登录弹窗(header 右上角触发) -->
+<!-- Login popup -->
 <div class="login-popup" id="login-popup">
   <h3>登录面板</h3>
-  <div class="field">
-    <label>用户名</label>
-    <input id="login-username" autocomplete="username" />
-  </div>
-  <div class="field">
-    <label>密码</label>
-    <input id="login-password" type="password" autocomplete="current-password" />
-  </div>
-  <div class="field" id="login-2fa-field" style="display:none;">
-    <label>两步验证码</label>
-    <input id="login-code" type="text" inputmode="numeric" maxlength="6" placeholder="6位验证码" autocomplete="one-time-code" />
-  </div>
-  <div class="modal-actions" style="margin-top:14px;">
+  <div class="field"><label>用户名</label><input id="login-username" autocomplete="username"/></div>
+  <div class="field"><label>密码</label><input id="login-password" type="password" autocomplete="current-password"/></div>
+  <div class="field" id="login-2fa-field" style="display:none"><label>两步验证码</label><input id="login-code" type="text" inputmode="numeric" maxlength="6" placeholder="6位验证码" autocomplete="one-time-code"/></div>
+  <div class="modal-actions" style="margin-top:12px">
     <button onclick="closeLoginPopup()">取消</button>
     <button class="primary" onclick="submitLogin()">登录</button>
   </div>
   <div class="login-error" id="login-error"></div>
 </div>
+
 <header>
   <h1 id="panel-title" title="点击修改(需登录)" onclick="renamePanel()">mote 监控面板</h1>
-  <div style="display:flex;align-items:center;gap:16px;">
-    <div class="stats" id="stats">加载中...</div>
+  <div class="header-right">
+    <div class="header-stats" id="stats"></div>
     <div class="theme-btns">
-      <div class="theme-dot" id="theme-dark"  style="background:#0f1419;" title="深色" onclick="setTheme('dark')"></div>
-      <div class="theme-dot" id="theme-light" style="background:#f6f8fa;" title="浅色" onclick="setTheme('light')"></div>
-      <div class="theme-dot" id="theme-blue"  style="background:#0a1929;" title="蓝色" onclick="setTheme('blue')"></div>
+      <div class="theme-dot" id="theme-dark"  style="background:#0f1419" title="深色" onclick="setTheme('dark')"></div>
+      <div class="theme-dot" id="theme-light" style="background:#f0f2f5" title="浅色" onclick="setTheme('light')"></div>
+      <div class="theme-dot" id="theme-blue"  style="background:#071523" title="蓝色" onclick="setTheme('blue')"></div>
     </div>
     <div id="header-auth">
       <button class="login-btn" id="header-login-btn" onclick="toggleLoginPopup()">登录</button>
-      <span id="header-user" style="display:none;font-size:13px;color:var(--text-dim);">
+      <span id="header-user" style="display:none;font-size:13px;color:var(--text-dim)">
         <span id="header-username"></span>
-        &nbsp;·&nbsp;<a href="#" style="color:var(--text-dim);" onclick="openModal('modal-change-pw');return false;">改密码</a>
-        &nbsp;·&nbsp;<a href="#" style="color:var(--text-dim);" onclick="openSettings();return false;" class="auth-required">设置</a>
-        &nbsp;·&nbsp;<a href="#" style="color:var(--text-dim);" onclick="logout();return false;">退出</a>
+        &nbsp;·&nbsp;<a href="#" style="color:var(--text-dim)" onclick="openModal('modal-change-pw');return false">改密</a>
+        &nbsp;·&nbsp;<a href="#" style="color:var(--text-dim)" onclick="openSettings();return false" class="auth-required">设置</a>
+        &nbsp;·&nbsp;<a href="#" style="color:var(--text-dim)" onclick="logout();return false">退出</a>
       </span>
     </div>
   </div>
@@ -219,27 +210,23 @@
 
 <div class="container">
   <div class="toolbar">
-    <button class="primary auth-required" onclick="openAdd()">+ 添加节点</button>
-    <button onclick="loadNodes()">↻ 刷新</button>
-    <button class="auth-required" onclick="openNotifiers()">🔔 通知渠道</button>
-    <button class="auth-required" onclick="openAlerts()">⚠ 告警规则</button>
-    <input id="tag-filter" placeholder="按 tag 筛选..." style="background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:13px;width:150px;" oninput="renderNodes()" />
+    <button class="primary auth-required" onclick="openAdd()"><span>+</span><span> 添加节点</span></button>
+    <button onclick="loadNodes()"><span>↻</span><span> 刷新</span></button>
+    <button class="auth-required" onclick="openNotifiers()"><span>🔔</span><span> 通知</span></button>
+    <button class="auth-required" onclick="openAlerts()"><span>⚠</span><span> 告警</span></button>
+    <button class="auth-required" onclick="openProbes()"><span>📡</span><span> 探针</span></button>
+    <input id="tag-filter" placeholder="按 tag 筛选…" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:7px;font-size:13px;width:140px" oninput="renderNodes()"/>
   </div>
   <div id="nodes" class="grid"></div>
 </div>
 
+<!-- Add node modal -->
 <div class="modal-mask" id="modal-add">
   <div class="modal">
     <h2>添加节点</h2>
-    <div class="field">
-      <label>节点名称</label>
-      <input id="add-name" placeholder="如:Tokyo-Premium" />
-    </div>
+    <div class="field"><label>节点名称</label><input id="add-name" placeholder="如: Tokyo-VPS"/></div>
     <div id="add-result" style="display:none">
-      <div class="field">
-        <label>节点已创建,在被控机器执行:</label>
-        <div class="pre-cmd" id="install-cmd"></div>
-      </div>
+      <div class="field"><label>节点已创建，在被控机器执行：</label><div class="pre-cmd" id="install-cmd"></div></div>
     </div>
     <div class="modal-actions">
       <button onclick="closeModal('modal-add')">关闭</button>
@@ -248,160 +235,112 @@
   </div>
 </div>
 
+<!-- ===== NODE DETAIL POPUP ===== -->
+<div class="modal-mask" id="modal-detail">
+  <div class="modal detail-modal">
+    <div class="detail-hdr">
+      <div class="detail-hdr-left">
+        <div class="detail-title">
+          <span class="dot" id="detail-dot"></span>
+          <span id="detail-name">节点名称</span>
+        </div>
+        <div class="detail-sub" id="detail-sub"></div>
+        <div id="detail-tags" style="margin-top:4px"></div>
+      </div>
+      <div class="detail-hdr-right">
+        <button class="primary auth-required sm" onclick="openEditFromDetail()">编辑</button>
+        <button class="sm" onclick="closeModal('modal-detail')">✕ 关闭</button>
+      </div>
+    </div>
+    <div class="detail-body">
+      <!-- Left: live metrics -->
+      <div class="detail-left">
+        <div class="detail-section">
+          <div class="detail-section-title">实时指标</div>
+          <div class="metric-row"><span class="label">CPU</span><div class="bar"><div id="d-cpu-bar"></div></div><span class="val" id="d-cpu-val">-</span></div>
+          <div class="metric-row"><span class="label">内存</span><div class="bar"><div id="d-mem-bar"></div></div><span class="val" id="d-mem-val">-</span></div>
+          <div id="d-swap-row" class="metric-row" style="display:none"><span class="label">Swap</span><div class="bar"><div id="d-swap-bar"></div></div><span class="val" id="d-swap-val">-</span></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-section-title">系统信息</div>
+          <div class="detail-info-row"><span class="detail-info-label">在线时长</span><span class="detail-info-val" id="d-uptime">-</span></div>
+          <div class="detail-info-row"><span class="detail-info-label">负载</span><span class="detail-info-val" id="d-load">-</span></div>
+          <div class="detail-info-row"><span class="detail-info-label">进程</span><span class="detail-info-val" id="d-proc">-</span></div>
+          <div class="detail-info-row"><span class="detail-info-label">TCP/UDP</span><span class="detail-info-val" id="d-conn">-</span></div>
+          <div class="detail-info-row"><span class="detail-info-label">入站速率</span><span class="detail-info-val val-green" id="d-netin">-</span></div>
+          <div class="detail-info-row"><span class="detail-info-label">出站速率</span><span class="detail-info-val val-yellow" id="d-netout">-</span></div>
+          <div class="detail-info-row"><span class="detail-info-label">延迟</span><span class="detail-info-val" id="d-latency">-</span></div>
+          <div class="detail-info-row"><span class="detail-info-label">丢包</span><span class="detail-info-val" id="d-loss">-</span></div>
+        </div>
+        <div class="detail-section" id="d-disk-section">
+          <div class="detail-section-title">磁盘</div>
+          <div id="d-disk-list"></div>
+        </div>
+        <div class="detail-section" id="d-traffic-section" style="display:none">
+          <div class="detail-section-title">本月流量</div>
+          <div class="metric-row"><div class="bar"><div id="d-traffic-bar"></div></div><span class="val" id="d-traffic-val">-</span></div>
+        </div>
+      </div>
+      <!-- Right: history charts -->
+      <div class="detail-right">
+        <div class="detail-section-title" style="margin-bottom:10px">历史曲线</div>
+        <div class="history-tabs">
+          <div class="history-tab active" onclick="loadDetailHistory('1h',this)">1小时</div>
+          <div class="history-tab" onclick="loadDetailHistory('24h',this)">24小时</div>
+          <div class="history-tab" onclick="loadDetailHistory('7d',this)">7天</div>
+          <div class="history-tab" onclick="loadDetailHistory('30d',this)">30天</div>
+        </div>
+        <div class="history-charts">
+          <div class="history-card"><h4>CPU %</h4><svg id="dc-cpu" class="chart" height="80" viewBox="0 0 320 80" preserveAspectRatio="none"></svg></div>
+          <div class="history-card"><h4>内存 %</h4><svg id="dc-mem" class="chart" height="80" viewBox="0 0 320 80" preserveAspectRatio="none"></svg></div>
+          <div class="history-card"><h4>入站流量</h4><svg id="dc-netin" class="chart" height="80" viewBox="0 0 320 80" preserveAspectRatio="none"></svg><div class="chart-meta" id="dc-netin-meta">-</div></div>
+          <div class="history-card"><h4>出站流量</h4><svg id="dc-netout" class="chart" height="80" viewBox="0 0 320 80" preserveAspectRatio="none"></svg><div class="chart-meta" id="dc-netout-meta">-</div></div>
+        </div>
+        <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+          <div class="detail-section-title" style="margin-bottom:10px">延迟探针（最近6小时）</div>
+          <div class="probe-grid">
+            <div class="probe-card"><h4>延迟 (ms)</h4><svg id="dc-latency" class="chart" height="100" viewBox="0 0 320 100" preserveAspectRatio="none"></svg><div class="chart-meta" id="dc-latency-meta">-</div></div>
+            <div class="probe-card"><h4>丢包 (%)</h4><svg id="dc-loss" class="chart" height="100" viewBox="0 0 320 100" preserveAspectRatio="none"></svg><div class="chart-meta" id="dc-loss-meta">-</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit node modal -->
 <div class="modal-mask" id="modal-edit">
   <div class="modal">
     <h2 id="edit-title">编辑节点</h2>
-    <input type="hidden" id="edit-id" />
-
+    <input type="hidden" id="edit-id"/>
+    <div class="field"><label>节点名称</label><input id="edit-name"/></div>
+    <div class="field"><label>标签（逗号分隔）</label><input id="edit-tags" placeholder="vps, hk, cn2"/></div>
     <div class="field">
-      <label>节点名称</label>
-      <input id="edit-name" />
+      <label>备注</label>
+      <textarea id="edit-note" placeholder="每行一条…"></textarea>
+      <label style="margin-top:6px;display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="edit-note-visible"/> 公开页显示</label>
     </div>
-
-    <div class="field">
-      <label>标签(逗号分隔,如 vps,hk,cn2)</label>
-      <input id="edit-tags" placeholder="tag1, tag2" />
-    </div>
-
-    <div class="field">
-      <label>备注(每行一条,在卡片上原样显示)</label>
-      <textarea id="edit-note" placeholder="例如:&#10;传家宝&#10;张三赠机&#10;2019年618购入"></textarea>
-      <label style="margin-top:6px;display:inline-block;">
-        <input type="checkbox" id="edit-note-visible" /> 公开页显示
-      </label>
-    </div>
-
-    <h3 style="margin-top:24px;border-top:1px solid var(--border);padding-top:16px;">账单</h3>
+    <h3 style="border-top:1px solid var(--border);padding-top:14px">账单</h3>
     <div class="field-row">
-      <div class="field">
-        <label>金额</label>
-        <input id="edit-price" type="number" step="0.01" />
-      </div>
-      <div class="field">
-        <label>货币</label>
-        <select id="edit-currency">
-          <option>USD</option><option>CNY</option><option>EUR</option><option>GBP</option>
-          <option>JPY</option><option>HKD</option><option>SGD</option><option>CAD</option>
-          <option>AUD</option><option>RUB</option><option>TRY</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>周期</label>
-        <select id="edit-cycle">
-          <option value="monthly">月付</option>
-          <option value="quarterly">季付</option>
-          <option value="semiannually">半年付</option>
-          <option value="yearly">年付</option>
-          <option value="biennially">两年付</option>
-          <option value="once">一次性</option>
-          <option value="lifetime">长期 / 终身</option>
-        </select>
-      </div>
+      <div class="field"><label>金额</label><input id="edit-price" type="number" step="0.01"/></div>
+      <div class="field"><label>货币</label><select id="edit-currency"><option>USD</option><option>CNY</option><option>EUR</option><option>GBP</option><option>JPY</option><option>HKD</option><option>SGD</option><option>CAD</option><option>AUD</option><option>RUB</option><option>TRY</option></select></div>
+      <div class="field"><label>周期</label><select id="edit-cycle"><option value="monthly">月付</option><option value="quarterly">季付</option><option value="semiannually">半年付</option><option value="yearly">年付</option><option value="biennially">两年付</option><option value="once">一次性</option><option value="lifetime">长期/终身</option></select></div>
     </div>
     <div class="field-row">
-      <div class="field">
-        <label>起租日期</label>
-        <input id="edit-start" type="date" />
-      </div>
-      <div class="field">
-        <label>下次到期(保存后自动算)</label>
-        <input id="edit-next-due" type="date" disabled />
-      </div>
+      <div class="field"><label>起租日期</label><input id="edit-start" type="date"/></div>
+      <div class="field"><label>下次到期（自动算）</label><input id="edit-next-due" type="date" disabled/></div>
     </div>
-
-    <h3 style="margin-top:24px;border-top:1px solid var(--border);padding-top:16px;">流量</h3>
+    <h3 style="border-top:1px solid var(--border);padding-top:14px">流量</h3>
     <div class="field-row">
-      <div class="field">
-        <label>上限 (GB,0 = 不限)</label>
-        <input id="edit-traffic-limit" type="number" step="0.1" />
-      </div>
-      <div class="field">
-        <label>统计模式</label>
-        <select id="edit-traffic-type">
-          <option value="sum">双向合计 (in+out)</option>
-          <option value="max">取大单向 max(in,out)</option>
-          <option value="out">仅出站</option>
-          <option value="in">仅入站</option>
-        </select>
-      </div>
+      <div class="field"><label>上限 (GB, 0=不限)</label><input id="edit-traffic-limit" type="number" step="0.1"/></div>
+      <div class="field"><label>统计模式</label><select id="edit-traffic-type"><option value="sum">双向合计</option><option value="max">取大单向</option><option value="out">仅出站</option><option value="in">仅入站</option></select></div>
     </div>
     <div class="field-row">
-      <div class="field">
-        <label>每月重置日 (1-31)</label>
-        <input id="edit-reset-day" type="number" min="1" max="31" />
-      </div>
-      <div class="field">
-        <label>重置时区</label>
-        <select id="edit-reset-tz">
-          <option>Asia/Shanghai</option>
-          <option>Asia/Tokyo</option>
-          <option>Asia/Singapore</option>
-          <option>UTC</option>
-          <option>America/New_York</option>
-          <option>America/Los_Angeles</option>
-          <option>Europe/London</option>
-          <option>Europe/Berlin</option>
-        </select>
-      </div>
+      <div class="field"><label>每月重置日</label><input id="edit-reset-day" type="number" min="1" max="31"/></div>
+      <div class="field"><label>重置时区</label><select id="edit-reset-tz"><option>Asia/Shanghai</option><option>Asia/Tokyo</option><option>Asia/Singapore</option><option>UTC</option><option>America/New_York</option><option>America/Los_Angeles</option><option>Europe/London</option><option>Europe/Berlin</option></select></div>
     </div>
-
-    <h3 style="margin-top:24px;border-top:1px solid var(--border);padding-top:16px;">磁盘</h3>
-    <div id="edit-disk-list" style="margin-bottom:4px;"></div>
-
-    <h3 style="margin-top:24px;border-top:1px solid var(--border);padding-top:16px;">网络探针</h3>
-    <div class="field-row">
-      <div class="field">
-        <label>实时延迟</label>
-        <input id="probe-latency-live" disabled />
-      </div>
-      <div class="field">
-        <label>实时丢包</label>
-        <input id="probe-loss-live" disabled />
-      </div>
-    </div>
-    <div class="probe-grid">
-      <div class="probe-card">
-        <h4>最近 6 小时延迟</h4>
-        <svg id="probe-latency-chart" class="chart" viewBox="0 0 320 140" preserveAspectRatio="none"></svg>
-        <div class="chart-meta" id="probe-latency-meta">-</div>
-      </div>
-      <div class="probe-card">
-        <h4>最近 6 小时丢包</h4>
-        <svg id="probe-loss-chart" class="chart" viewBox="0 0 320 140" preserveAspectRatio="none"></svg>
-        <div class="chart-meta" id="probe-loss-meta">-</div>
-      </div>
-    </div>
-
-    <div class="history-section">
-      <h3 style="margin:0 0 10px;font-size:13px;">历史曲线</h3>
-      <div class="history-tabs">
-        <div class="history-tab active" onclick="loadHistory('1h',this)">1小时</div>
-        <div class="history-tab" onclick="loadHistory('24h',this)">24小时</div>
-        <div class="history-tab" onclick="loadHistory('7d',this)">7天</div>
-        <div class="history-tab" onclick="loadHistory('30d',this)">30天</div>
-      </div>
-      <div class="history-charts">
-        <div class="history-card">
-          <h4>CPU %</h4>
-          <svg id="hist-cpu-chart" class="chart" viewBox="0 0 320 100" preserveAspectRatio="none"></svg>
-        </div>
-        <div class="history-card">
-          <h4>内存 %</h4>
-          <svg id="hist-mem-chart" class="chart" viewBox="0 0 320 100" preserveAspectRatio="none"></svg>
-        </div>
-        <div class="history-card">
-          <h4>入站流量</h4>
-          <svg id="hist-netin-chart" class="chart" viewBox="0 0 320 100" preserveAspectRatio="none"></svg>
-          <div class="chart-meta" id="hist-netin-meta">-</div>
-        </div>
-        <div class="history-card">
-          <h4>出站流量</h4>
-          <svg id="hist-netout-chart" class="chart" viewBox="0 0 320 100" preserveAspectRatio="none"></svg>
-          <div class="chart-meta" id="hist-netout-meta">-</div>
-        </div>
-      </div>
-    </div>
-
+    <h3 style="border-top:1px solid var(--border);padding-top:14px">磁盘</h3>
+    <div id="edit-disk-list" style="margin-bottom:4px"></div>
     <div class="modal-actions">
       <button class="danger auth-required" onclick="deleteNode()">删除节点</button>
       <button class="auth-required" id="btn-uninstall-node" onclick="uninstallNode()">远程卸载</button>
@@ -412,22 +351,13 @@
   </div>
 </div>
 
-<!-- 修改密码 -->
+<!-- Change password -->
 <div class="modal-mask" id="modal-change-pw">
-  <div class="modal" style="max-width:360px;">
+  <div class="modal" style="max-width:360px">
     <h2>修改密码</h2>
-    <div class="field">
-      <label>旧密码</label>
-      <input id="cpw-old" type="password" autocomplete="current-password" />
-    </div>
-    <div class="field">
-      <label>新密码(至少 6 位)</label>
-      <input id="cpw-new" type="password" autocomplete="new-password" />
-    </div>
-    <div class="field">
-      <label>确认新密码</label>
-      <input id="cpw-confirm" type="password" autocomplete="new-password" />
-    </div>
+    <div class="field"><label>旧密码</label><input id="cpw-old" type="password" autocomplete="current-password"/></div>
+    <div class="field"><label>新密码（至少6位）</label><input id="cpw-new" type="password" autocomplete="new-password"/></div>
+    <div class="field"><label>确认新密码</label><input id="cpw-confirm" type="password" autocomplete="new-password"/></div>
     <div class="modal-actions">
       <button onclick="closeModal('modal-change-pw')">取消</button>
       <button class="primary" onclick="submitChangePassword()">确认修改</button>
@@ -435,47 +365,24 @@
   </div>
 </div>
 
-<!-- 通知渠道 -->
+<!-- Notifiers -->
 <div class="modal-mask" id="modal-notifiers">
-  <div class="modal" style="max-width:720px;">
-    <h2>🔔 通知渠道(Telegram)</h2>
-    <p style="color:var(--text-dim);font-size:12px;margin:0 0 12px;">
-      创建 Telegram Bot:在 TG 找 <b>@BotFather</b> → /newbot → 拿到 bot_token<br>
-      获取 chat_id:把 Bot 拉进群,或 私聊后访问
-      <code style="color:var(--text-dim)">https://api.telegram.org/bot&lt;token&gt;/getUpdates</code>
-    </p>
-    <div id="notifier-list" style="margin-bottom:16px;"></div>
-
-    <h3 style="border-top:1px solid var(--border);padding-top:16px;">新增 / 编辑</h3>
-    <input type="hidden" id="notifier-id" value="0" />
+  <div class="modal" style="max-width:720px">
+    <h2>🔔 通知渠道 (Telegram)</h2>
+    <p style="color:var(--text-dim);font-size:12px;margin:0 0 12px">@BotFather 创建 Bot → 获取 bot_token 和 chat_id</p>
+    <div id="notifier-list" style="margin-bottom:16px"></div>
+    <h3 style="border-top:1px solid var(--border);padding-top:14px">新增 / 编辑</h3>
+    <input type="hidden" id="notifier-id" value="0"/>
     <div class="field-row">
-      <div class="field">
-        <label>名称</label>
-        <input id="notifier-name" placeholder="如:管理员私聊" />
-      </div>
-      <div class="field">
-        <label>类型</label>
-        <select id="notifier-type"><option value="telegram">Telegram</option></select>
-      </div>
+      <div class="field"><label>名称</label><input id="notifier-name" placeholder="管理员私聊"/></div>
+      <div class="field"><label>类型</label><select id="notifier-type"><option value="telegram">Telegram</option></select></div>
     </div>
-    <div class="field">
-      <label>Bot Token</label>
-      <input id="notifier-token" placeholder="123456789:ABCdef..." />
-    </div>
+    <div class="field"><label>Bot Token</label><input id="notifier-token" placeholder="123456789:ABCdef…"/></div>
     <div class="field-row">
-      <div class="field">
-        <label>Chat ID</label>
-        <input id="notifier-chat" placeholder="-1001234567890 或 user_id" />
-      </div>
-      <div class="field">
-        <label>Thread ID(群话题,可空)</label>
-        <input id="notifier-thread" type="number" placeholder="0" />
-      </div>
+      <div class="field"><label>Chat ID</label><input id="notifier-chat" placeholder="-100… 或 user_id"/></div>
+      <div class="field"><label>Thread ID（可空）</label><input id="notifier-thread" type="number" placeholder="0"/></div>
     </div>
-    <label style="display:inline-block;margin:6px 0;">
-      <input type="checkbox" id="notifier-enabled" checked /> 启用
-    </label>
-
+    <label style="display:inline-flex;align-items:center;gap:6px;margin:6px 0;cursor:pointer"><input type="checkbox" id="notifier-enabled" checked/> 启用</label>
     <div class="modal-actions">
       <button onclick="closeModal('modal-notifiers')">关闭</button>
       <button onclick="testNotifier()">测试推送</button>
@@ -484,78 +391,30 @@
   </div>
 </div>
 
-<!-- 告警规则 -->
+<!-- Alerts -->
 <div class="modal-mask" id="modal-alerts">
-  <div class="modal" style="max-width:760px;">
+  <div class="modal" style="max-width:760px">
     <h2>⚠ 告警规则</h2>
-    <div id="alert-list" style="margin-bottom:16px;"></div>
-
-    <h3 style="border-top:1px solid var(--border);padding-top:16px;">新增 / 编辑</h3>
-    <input type="hidden" id="alert-id" value="0" />
+    <div id="alert-list" style="margin-bottom:16px"></div>
+    <h3 style="border-top:1px solid var(--border);padding-top:14px">新增 / 编辑</h3>
+    <input type="hidden" id="alert-id" value="0"/>
     <div class="field-row">
-      <div class="field">
-        <label>名称</label>
-        <input id="alert-name" placeholder="如:CPU 持续高占用" />
-      </div>
-      <div class="field">
-        <label>类型</label>
-        <select id="alert-kind" onchange="onAlertKindChange()">
-          <option value="offline">节点离线</option>
-          <option value="online">节点首次上线</option>
-          <option value="cpu">CPU 持续高</option>
-          <option value="mem">内存持续高</option>
-          <option value="disk">磁盘使用率高</option>
-          <option value="load">负载(Load1)高</option>
-          <option value="traffic">流量阈值(50/80/95/100)</option>
-          <option value="due">续费到期提醒</option>
-        </select>
-      </div>
+      <div class="field"><label>名称</label><input id="alert-name" placeholder="CPU 持续高占用"/></div>
+      <div class="field"><label>类型</label><select id="alert-kind" onchange="onAlertKindChange()"><option value="offline">节点离线</option><option value="online">节点首次上线</option><option value="cpu">CPU 持续高</option><option value="mem">内存持续高</option><option value="disk">磁盘使用率高</option><option value="load">负载(Load1)高</option><option value="traffic">流量阈值</option><option value="due">续费到期提醒</option></select></div>
     </div>
     <div class="field-row">
-      <div class="field">
-        <label id="alert-threshold-label">阈值</label>
-        <input id="alert-threshold" type="number" step="0.1" />
-      </div>
-      <div class="field">
-        <label>持续时间(秒,0=立即)</label>
-        <input id="alert-duration" type="number" min="0" />
-      </div>
-      <div class="field">
-        <label>冷却(秒)</label>
-        <input id="alert-cooldown" type="number" min="60" value="1800"
-          oninput="document.getElementById('alert-cooldown-hint').textContent=this.value>0?(Math.round(this.value/60*10)/10)+'分钟':''" />
-        <span id="alert-cooldown-hint" style="margin-left:6px;color:#888;font-size:0.85em">30分钟</span>
-      </div>
+      <div class="field"><label id="alert-threshold-label">阈值</label><input id="alert-threshold" type="number" step="0.1"/></div>
+      <div class="field"><label>持续时间(秒,0=立即)</label><input id="alert-duration" type="number" min="0"/></div>
+      <div class="field"><label>冷却(秒)</label><input id="alert-cooldown" type="number" min="60" value="1800" oninput="document.getElementById('alert-cooldown-hint').textContent=this.value>0?(Math.round(this.value/60*10)/10)+'分钟':''"/><span id="alert-cooldown-hint" style="margin-left:6px;color:var(--text-dim);font-size:0.85em">30分钟</span></div>
     </div>
-    <div class="field" id="alert-extra-field" style="display:none;">
-      <label>续费提醒天数(英文逗号分隔,如 7,3,1)</label>
-      <input id="alert-extra-days" placeholder="7,3,1" />
-    </div>
-    <div class="field">
-      <label>作用范围</label>
-      <select id="alert-target">
-        <option value="all">全部节点</option>
-        <!-- 节点列表运行时填充 -->
-      </select>
-    </div>
-    <div class="field">
-      <label>通知渠道(多选)</label>
-      <div id="alert-notifier-checks" style="padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--panel-2);"></div>
-    </div>
+    <div class="field" id="alert-extra-field" style="display:none"><label>续费提醒天数（如 7,3,1）</label><input id="alert-extra-days" placeholder="7,3,1"/></div>
+    <div class="field"><label>作用范围</label><select id="alert-target"><option value="all">全部节点</option></select></div>
+    <div class="field"><label>通知渠道（多选）</label><div id="alert-notifier-checks" style="padding:8px;border:1px solid var(--border);border-radius:7px;background:var(--panel-2)"></div></div>
     <div class="field-row">
-      <div class="field">
-        <label>静默起 (HH:MM,空=不静默)</label>
-        <input id="alert-silent-from" placeholder="22:00" />
-      </div>
-      <div class="field">
-        <label>静默止 (HH:MM)</label>
-        <input id="alert-silent-to" placeholder="08:00" />
-      </div>
+      <div class="field"><label>静默起 (HH:MM)</label><input id="alert-silent-from" placeholder="22:00"/></div>
+      <div class="field"><label>静默止 (HH:MM)</label><input id="alert-silent-to" placeholder="08:00"/></div>
     </div>
-    <label style="display:inline-block;margin:6px 0;">
-      <input type="checkbox" id="alert-enabled" checked /> 启用
-    </label>
-
+    <label style="display:inline-flex;align-items:center;gap:6px;margin:6px 0;cursor:pointer"><input type="checkbox" id="alert-enabled" checked/> 启用</label>
     <div class="modal-actions">
       <button onclick="closeModal('modal-alerts')">关闭</button>
       <button onclick="resetAlertForm()">新建</button>
@@ -564,9 +423,9 @@
   </div>
 </div>
 
-<!-- 设置面板 -->
+<!-- Settings -->
 <div class="modal-mask" id="modal-settings">
-  <div class="modal" style="max-width:720px;">
+  <div class="modal" style="max-width:720px">
     <h2>⚙ 设置</h2>
     <div class="settings-tabs">
       <div class="settings-tab active" onclick="switchSettingsTab('general',this)">常规</div>
@@ -575,1169 +434,736 @@
       <div class="settings-tab" onclick="switchSettingsTab('audit',this)">审计日志</div>
       <div class="settings-tab" onclick="switchSettingsTab('danger',this)">危险操作</div>
     </div>
-
-    <!-- 常规 -->
     <div class="settings-panel active" id="settings-general">
-      <div class="field">
-        <label>面板标题</label>
-        <input id="settings-title" />
-      </div>
-      <div class="field">
-        <label>主货币</label>
-        <input id="settings-currency" placeholder="USD" style="width:100px;" />
-      </div>
-      <div class="field">
-        <label style="display:flex;align-items:center;gap:8px;">
-          <input type="checkbox" id="settings-public" /> 开放公开页(未登录也可查看)
-        </label>
-      </div>
-      <div class="modal-actions">
-        <button class="primary" onclick="saveGeneralSettings()">保存</button>
-      </div>
+      <div class="field"><label>面板标题</label><input id="settings-title"/></div>
+      <div class="field"><label>主货币</label><input id="settings-currency" placeholder="USD" style="width:100px"/></div>
+      <div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="settings-public"/> 开放公开页（未登录也可查看）</label></div>
+      <div class="modal-actions"><button class="primary" onclick="saveGeneralSettings()">保存</button></div>
     </div>
-
-    <!-- 2FA -->
     <div class="settings-panel" id="settings-2fa">
-      <div id="tfa-status-text" style="margin-bottom:12px;"></div>
-      <div id="tfa-setup-section" style="display:none;">
-        <div class="field">
-          <label>密钥(复制到 Google Authenticator 或 Authy)</label>
-          <input id="tfa-secret" readonly style="font-family:monospace;" />
-        </div>
-        <div class="field">
-          <label>otpauth:// URI(可扫码)</label>
-          <textarea id="tfa-uri" readonly style="font-family:monospace;font-size:11px;min-height:60px;"></textarea>
-        </div>
-        <div class="field">
-          <label>输入 App 生成的 6 位验证码以完成绑定</label>
-          <input id="tfa-code" type="text" inputmode="numeric" maxlength="6" placeholder="123456" style="width:160px;" />
-        </div>
-        <div class="modal-actions">
-          <button onclick="cancel2FASetup()">取消</button>
-          <button class="primary" onclick="verify2FA()">确认绑定</button>
-        </div>
+      <div id="tfa-status-text" style="margin-bottom:12px"></div>
+      <div id="tfa-setup-section" style="display:none">
+        <div class="field"><label>密钥（复制到 Google Authenticator 或 Authy）</label><input id="tfa-secret" readonly style="font-family:monospace"/></div>
+        <div class="field"><label>otpauth:// URI（可扫码）</label><textarea id="tfa-uri" readonly style="font-family:monospace;font-size:11px;min-height:60px"></textarea></div>
+        <div class="field"><label>输入 App 生成的 6 位验证码完成绑定</label><input id="tfa-code" type="text" inputmode="numeric" maxlength="6" placeholder="123456" style="width:160px"/></div>
+        <div class="modal-actions"><button onclick="cancel2FASetup()">取消</button><button class="primary" onclick="verify2FA()">确认绑定</button></div>
       </div>
-      <div id="tfa-enable-btn-row">
-        <button class="primary" id="tfa-toggle-btn" onclick="toggle2FA()">加载中...</button>
-      </div>
-      <div id="tfa-disable-section" style="display:none;margin-top:12px;">
-        <div class="field">
-          <label>输入密码以关闭两步验证</label>
-          <input id="tfa-disable-pw" type="password" style="width:200px;" />
-        </div>
+      <div id="tfa-enable-btn-row"><button class="primary" id="tfa-toggle-btn" onclick="toggle2FA()">加载中…</button></div>
+      <div id="tfa-disable-section" style="display:none;margin-top:12px">
+        <div class="field"><label>输入密码以关闭两步验证</label><input id="tfa-disable-pw" type="password" style="width:200px"/></div>
         <button class="danger" onclick="disable2FA()">确认关闭</button>
       </div>
     </div>
-
-    <!-- 备份/恢复 -->
     <div class="settings-panel" id="settings-backup">
-      <p style="color:var(--text-dim);font-size:12px;margin:0 0 16px;">导出包含节点列表、通知渠道、告警规则的 JSON 文件。Token 原样保留,恢复后 Agent 无需重新安装。</p>
-      <div class="modal-actions" style="justify-content:flex-start;">
-        <a id="backup-export-link" href="/api/backup/export" download="mote-backup.json">
-          <button>⬇ 导出备份</button>
-        </a>
-        <label style="cursor:pointer;">
-          <button onclick="document.getElementById('backup-file-input').click()">⬆ 导入备份</button>
-          <input type="file" id="backup-file-input" accept=".json" style="display:none;" onchange="importBackup(this)" />
-        </label>
+      <p style="color:var(--text-dim);font-size:12px;margin:0 0 16px">导出包含节点、渠道、规则的 JSON。Token 原样保留，恢复后无需重装 Agent。</p>
+      <div class="modal-actions" style="justify-content:flex-start">
+        <a id="backup-export-link" href="/api/backup/export" download="mote-backup.json"><button>⬇ 导出备份</button></a>
+        <label style="cursor:pointer"><button onclick="document.getElementById('backup-file-input').click()">⬆ 导入备份</button><input type="file" id="backup-file-input" accept=".json" style="display:none" onchange="importBackup(this)"/></label>
       </div>
-      <div id="backup-import-status" style="margin-top:8px;font-size:13px;"></div>
+      <div id="backup-import-status" style="margin-top:8px;font-size:13px"></div>
     </div>
-
-    <!-- 审计日志 -->
     <div class="settings-panel" id="settings-audit">
-      <div id="audit-list-container">
-        <div style="color:var(--text-dim);font-size:13px;">加载中...</div>
-      </div>
-      <div class="modal-actions" style="justify-content:flex-start;margin-top:8px;">
-        <button onclick="loadAuditLog()">↻ 刷新</button>
-      </div>
+      <div id="audit-list-container"><div style="color:var(--text-dim);font-size:13px">加载中…</div></div>
+      <div class="modal-actions" style="justify-content:flex-start;margin-top:8px"><button onclick="loadAuditLog()">↻ 刷新</button></div>
     </div>
-
-    <!-- 危险操作 -->
     <div class="settings-panel" id="settings-danger">
-      <div style="border:1px solid var(--red);border-radius:8px;padding:16px;margin-bottom:16px;">
-        <h3 style="color:var(--red);margin:0 0 8px;">全员卸载</h3>
-        <p style="color:var(--text-dim);font-size:12px;margin:0 0 12px;">向所有在线节点发送卸载指令。被控将自动停止并清理文件。此操作不可逆。</p>
+      <div style="border:1px solid var(--red);border-radius:8px;padding:16px">
+        <h3 style="color:var(--red);margin:0 0 8px">全员卸载</h3>
+        <p style="color:var(--text-dim);font-size:12px;margin:0 0 12px">向所有在线节点发送卸载指令。此操作不可逆。</p>
         <button class="danger" onclick="uninstallAll()">向所有在线节点下发卸载</button>
       </div>
     </div>
-
-    <div class="modal-actions" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">
+    <div class="modal-actions" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
       <button onclick="closeModal('modal-settings')">关闭</button>
     </div>
   </div>
 </div>
 
-<script>
-let nodes = [];
-let editingId = 0;
-let _loggedIn = false;
-let _selfMonitorNodeId = 0;
+<!-- ===== PROBE MANAGEMENT MODAL ===== -->
+<div class="modal-mask" id="modal-probe">
+  <div class="modal" style="max-width:780px">
+    <h2>📡 延迟探针管理</h2>
+    <p style="color:var(--text-dim);font-size:12px;margin:0 0 14px">配置探针目标并分配给被控节点执行。被控将每60秒上报一次探测结果。</p>
+    <div id="probe-target-list" style="margin-bottom:16px"></div>
 
+    <!-- Probe results view (shown when clicking a target) -->
+    <div id="probe-results-view" style="display:none;margin-bottom:16px;border:1px solid var(--border);border-radius:8px;padding:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="margin:0" id="probe-results-title">探针结果</h3>
+        <div style="display:flex;gap:6px">
+          <div class="history-tab active" onclick="loadProbeResultsView('1h',this)">1h</div>
+          <div class="history-tab" onclick="loadProbeResultsView('6h',this)">6h</div>
+          <div class="history-tab" onclick="loadProbeResultsView('24h',this)">24h</div>
+          <button class="sm" onclick="document.getElementById('probe-results-view').style.display='none'">收起</button>
+        </div>
+      </div>
+      <div class="probe-result-grid" id="probe-result-grid"></div>
+    </div>
+
+    <h3 style="border-top:1px solid var(--border);padding-top:14px">新增 / 编辑探针目标</h3>
+    <input type="hidden" id="probe-id" value="0"/>
+    <div class="field-row">
+      <div class="field"><label>名称</label><input id="probe-name" placeholder="Cloudflare DNS"/></div>
+      <div class="field"><label>目标 IP / 域名</label><input id="probe-ip" placeholder="1.1.1.1"/></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>TCP 端口（0=不探TCP）</label><input id="probe-port" type="number" placeholder="443" value="0"/></div>
+      <div class="field"><label>探针协议</label>
+        <select id="probe-proto">
+          <option value="icmp">ICMP Ping</option>
+          <option value="tcp">TCP 端口</option>
+          <option value="both">ICMP + TCP</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>分配节点（被控执行探测）</label>
+      <div id="probe-node-checks" style="padding:8px;border:1px solid var(--border);border-radius:7px;background:var(--panel-2);min-height:36px"></div>
+    </div>
+    <label style="display:inline-flex;align-items:center;gap:6px;margin:6px 0;cursor:pointer"><input type="checkbox" id="probe-enabled" checked/> 启用</label>
+    <div class="modal-actions">
+      <button onclick="closeModal('modal-probe')">关闭</button>
+      <button onclick="resetProbeForm()">新建</button>
+      <button class="primary" onclick="saveProbeTarget()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== State =====
+var nodes = [];
+var editingId = 0;
+var detailId = 0;
+var _loggedIn = false;
+var _selfMonitorNodeId = 0;
+var _viewingProbeTargetId = 0;
+
+// ===== API helper =====
 async function api(path, options) {
   options = options || {};
   options.headers = options.headers || {};
   options.headers["Content-Type"] = "application/json";
   const r = await fetch(path, options);
-  if (r.status === 401) {
-    _loggedIn = false;
-    updateAuthUI(false);
-    throw new Error("需要登录");
-  }
+  if (r.status === 401) { _loggedIn = false; updateAuthUI(false); throw new Error("需要登录"); }
   if (!r.ok) throw new Error(r.status + ": " + (await r.text()));
   const ct = r.headers.get("Content-Type") || "";
   if (ct.indexOf("json") >= 0) return r.json();
   return r.text();
 }
 
+// ===== Auth =====
 function updateAuthUI(loggedIn) {
   _loggedIn = loggedIn;
-  const body = document.body;
-  if (loggedIn) {
-    body.classList.add("logged-in");
-  } else {
-    body.classList.remove("logged-in");
-  }
+  document.body.classList.toggle("logged-in", loggedIn);
   document.getElementById("header-login-btn").style.display = loggedIn ? "none" : "";
   document.getElementById("header-user").style.display = loggedIn ? "" : "none";
 }
-
 function toggleLoginPopup() {
-  const popup = document.getElementById("login-popup");
-  const showing = popup.classList.contains("show");
-  popup.classList.toggle("show", !showing);
-  if (!showing) document.getElementById("login-username").focus();
+  const p = document.getElementById("login-popup");
+  p.classList.toggle("show");
+  if (p.classList.contains("show")) document.getElementById("login-username").focus();
 }
-
 function closeLoginPopup() {
   document.getElementById("login-popup").classList.remove("show");
   document.getElementById("login-error").textContent = "";
 }
-
 async function submitLogin() {
   const username = document.getElementById("login-username").value.trim();
   const password = document.getElementById("login-password").value;
   const code = (document.getElementById("login-code")||{}).value || "";
   document.getElementById("login-error").textContent = "";
   try {
-    await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: username, password: password, code: code })
-    }).then(async function(r) {
-      if (!r.ok) throw new Error(await r.text());
-    });
+    await fetch("/api/login", { method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({username, password, code})
+    }).then(async r => { if (!r.ok) throw new Error(await r.text()); });
     closeLoginPopup();
     document.getElementById("header-username").textContent = username;
     updateAuthUI(true);
     await loadNodes();
-  } catch (e) {
-    document.getElementById("login-error").textContent = e.message || "登录失败";
-  }
+  } catch(e) { document.getElementById("login-error").textContent = e.message || "登录失败"; }
 }
-
 async function logout() {
-  try { await fetch("/api/logout", { method: "POST" }); } catch(e) {}
-  updateAuthUI(false);
-  loadNodes();
+  try { await fetch("/api/logout", {method:"POST"}); } catch(e) {}
+  updateAuthUI(false); loadNodes();
 }
-
 async function submitChangePassword() {
   const oldPw = document.getElementById("cpw-old").value;
   const newPw = document.getElementById("cpw-new").value;
   const confirm = document.getElementById("cpw-confirm").value;
   if (newPw !== confirm) { alert("两次新密码不一致"); return; }
-  if (newPw.length < 6) { alert("新密码太短(至少 6 位)"); return; }
+  if (newPw.length < 6) { alert("新密码太短(至少6位)"); return; }
   try {
-    await api("/api/change-password", {
-      method: "POST",
-      body: JSON.stringify({ old: oldPw, new: newPw })
-    });
+    await api("/api/change-password", {method:"POST", body: JSON.stringify({old:oldPw, new:newPw})});
     closeModal("modal-change-pw");
-    document.getElementById("cpw-old").value = "";
-    document.getElementById("cpw-new").value = "";
-    document.getElementById("cpw-confirm").value = "";
-    alert("密码已修改，请重新登录");
-    updateAuthUI(false);
-  } catch(e) {
-    alert("修改失败: " + e.message);
-  }
+    ["cpw-old","cpw-new","cpw-confirm"].forEach(id => document.getElementById(id).value = "");
+    alert("密码已修改，请重新登录"); updateAuthUI(false);
+  } catch(e) { alert("修改失败: " + e.message); }
 }
 
+// ===== Nodes =====
 async function loadNodes() {
   try {
     nodes = (await api("/api/nodes")) || [];
-    renderNodes();
-    updateStats();
-  } catch (e) {
-    document.getElementById("nodes").innerHTML =
-      '<div class="empty"><h3>加载失败</h3><p>' + e.message + '</p></div>';
+    renderNodes(); updateStats();
+  } catch(e) {
+    document.getElementById("nodes").innerHTML = '<div class="empty"><h3>加载失败</h3><p>' + e.message + '</p></div>';
   }
 }
-
 async function loadApp() {
-  // 先检查登录状态
   try {
-    const me = await fetch("/api/whoami").then(function(r){ return r.json(); });
+    const me = await fetch("/api/whoami").then(r => r.json());
     updateAuthUI(me.logged_in || false);
-    if (me.logged_in) {
-      document.getElementById("header-username").textContent = me.username || "admin";
-    }
+    if (me.logged_in) document.getElementById("header-username").textContent = me.username || "admin";
   } catch(e) {}
   try { await loadConfig(); } catch(e) {}
   try { await loadNodes(); } catch(e) {}
 }
-
 function updateStats() {
-  const online = nodes.filter(function(n){return n.online;}).length;
-  document.getElementById("stats").textContent =
-    "节点 " + nodes.length + " · 在线 " + online + " · 离线 " + (nodes.length - online);
+  const on = nodes.filter(n => n.online).length;
+  document.getElementById("stats").textContent = "共 "+nodes.length+" 节点 · 在线 "+on+" · 离线 "+(nodes.length-on);
 }
 
+// ===== Formatters =====
 function fmtBytes(n) {
-  if (!n || n === 0) return "0";
-  const u = ["B","KB","MB","GB","TB","PB"];
-  let i = 0;
-  while (n >= 1024 && i < u.length-1) { n /= 1024; i++; }
-  return n.toFixed(n < 10 ? 2 : 1) + " " + u[i];
+  if (!n || n===0) return "0 B";
+  const u=["B","KB","MB","GB","TB","PB"]; let i=0;
+  while (n>=1024&&i<u.length-1){n/=1024;i++;}
+  return n.toFixed(n<10?2:1)+" "+u[i];
 }
-function fmtSpeed(n) { return fmtBytes(n) + "/s"; }
-function fmtLatency(ms) {
-  return ms && ms > 0 ? ms.toFixed(1) + " ms" : "-";
+function fmtSpeed(n){return fmtBytes(n)+"/s";}
+function fmtLatency(ms){return (ms&&ms>0)?ms.toFixed(1)+" ms":"-";}
+function fmtLoss(p){return (p&&p>0)?p.toFixed(1)+"%":"0.0%";}
+function fmtPct(u,t){return t?Math.min(100,u/t*100):0;}
+function pctClass(p){return p>90?"danger":p>70?"warn":"";}
+function fmtUptime(s) {
+  if (!s) return "-";
+  const d=Math.floor(s/86400), h=Math.floor((s%86400)/3600);
+  if (d>0) return d+"天 "+h+"小时";
+  return h+"小时 "+Math.floor((s%3600)/60)+"分";
 }
-function fmtLoss(pct) {
-  return pct && pct > 0 ? pct.toFixed(1) + "%" : "0.0%";
-}
-function fmtPct(used, total) { return total ? Math.min(100, used/total*100) : 0; }
-function pctClass(p) { return p > 90 ? "danger" : p > 70 ? "warn" : ""; }
-
-function fmtUptime(sec) {
-  if (!sec) return "-";
-  const d = Math.floor(sec/86400);
-  const h = Math.floor((sec%86400)/3600);
-  if (d > 0) return d + "天 " + h + "小时";
-  const m = Math.floor((sec%3600)/60);
-  return h + "小时 " + m + "分";
-}
-
 function fmtDaysLeft(ts) {
   if (!ts) return "";
-  const days = Math.floor((ts*1000 - Date.now()) / 86400000);
-  if (days < 0) return "已过期 " + (-days) + "天";
-  if (days === 0) return "今天";
-  return days + "天后";
+  const d=Math.floor((ts*1000-Date.now())/86400000);
+  if (d<0) return "已过期 "+(-d)+"天";
+  if (d===0) return "今天";
+  return d+"天后";
 }
-
 function dueClass(ts) {
   if (!ts) return "";
-  const days = Math.floor((ts*1000 - Date.now()) / 86400000);
-  if (days <= 3) return "due-very-soon";
-  if (days <= 7) return "due-soon";
+  const d=Math.floor((ts*1000-Date.now())/86400000);
+  if (d<=3) return "due-very-soon";
+  if (d<=7) return "due-soon";
   return "";
 }
-
 function calcTraffic(meta) {
-  if (!meta || !meta.traffic_limit) return null;
-  const t = meta.traffic_type || "sum";
-  let used = 0;
-  if (t === "sum") used = (meta.traffic_used_in||0) + (meta.traffic_used_out||0);
-  else if (t === "max") used = Math.max(meta.traffic_used_in||0, meta.traffic_used_out||0);
-  else if (t === "in") used = meta.traffic_used_in||0;
-  else if (t === "out") used = meta.traffic_used_out||0;
-  return { used: used, limit: meta.traffic_limit, pct: fmtPct(used, meta.traffic_limit) };
+  if (!meta||!meta.traffic_limit) return null;
+  const t=meta.traffic_type||"sum"; let used=0;
+  if (t==="sum") used=(meta.traffic_used_in||0)+(meta.traffic_used_out||0);
+  else if (t==="max") used=Math.max(meta.traffic_used_in||0,meta.traffic_used_out||0);
+  else if (t==="in") used=meta.traffic_used_in||0;
+  else if (t==="out") used=meta.traffic_used_out||0;
+  return {used,limit:meta.traffic_limit,pct:fmtPct(used,meta.traffic_limit)};
 }
-
 function escapeHTML(s) {
-  return String(s).replace(/[&<>"']/g, function(c){
-    return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c];
-  });
+  return String(s==null?"":s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 }
 
+// ===== Render nodes =====
 function renderNodes() {
   const root = document.getElementById("nodes");
   const filterTag = (document.getElementById("tag-filter")||{}).value||"";
   let filtered = nodes;
   if (filterTag.trim()) {
-    const f = filterTag.trim().toLowerCase();
-    filtered = nodes.filter(function(n){ return (n.tags||[]).some(function(t){ return t.toLowerCase().indexOf(f)>=0; }); });
+    const f=filterTag.trim().toLowerCase();
+    filtered = nodes.filter(n=>(n.tags||[]).some(t=>t.toLowerCase().includes(f)));
   }
   if (!filtered.length) {
-    root.innerHTML = '<div class="empty"><h3>' + (filterTag ? '无匹配节点' : '还没有节点') + '</h3>'
-      + (filterTag ? '' : '<p>点击 "添加节点" 创建第一个</p>') + '</div>';
+    root.innerHTML = '<div class="empty"><h3>'+(filterTag?'无匹配节点':'还没有节点')+'</h3>'+(filterTag?'':'<p>点击 "添加节点" 创建第一个</p>')+'</div>';
     return;
   }
-  root.innerHTML = filtered.map(renderNode).join("");
+  root.innerHTML = filtered.map(renderNodeCard).join("");
 }
-
-function renderNode(n) {
-  const m = n.latest || {};
-  const meta = n.meta || {};
-  const latest = n.latest || {};
-  const cpuPct = m.cpu || 0;
-  const memPct = fmtPct(m.mem_u, m.mem_t);
-  const latency = fmtLatency(m.latency_ms || 0);
-  const loss = fmtLoss(m.loss_pct || 0);
+function renderNodeCard(n) {
+  const m = n.latest || {}, meta = n.meta || {};
+  const cpuPct = m.cpu||0, memPct = fmtPct(m.mem_u,m.mem_t);
+  const latency = fmtLatency(m.latency_ms||0), loss = fmtLoss(m.loss_pct||0);
   const traffic = calcTraffic(meta);
-
-  const noteHTML = (meta.note || "").trim()
-    ? '<div class="node-note">' + escapeHTML(meta.note) + '</div>' : "";
-
-  const trafficHTML = traffic
-    ? '<div class="metric-row">'
-      + '<span class="label">流量</span>'
-      + '<div class="bar"><div class="' + pctClass(traffic.pct)
-      + '" style="width:' + traffic.pct + '%"></div></div>'
-      + '<span class="val">' + fmtBytes(traffic.used) + ' / ' + fmtBytes(traffic.limit) + '</span>'
-      + '</div>'
-    : "";
-
+  const noteHTML = (meta.note||"").trim() ? '<div class="node-note">'+escapeHTML(meta.note)+'</div>' : "";
+  const tagsHTML = (n.tags||[]).length ? '<div class="tags">'+(n.tags||[]).map(t=>'<span class="tag">'+escapeHTML(t)+'</span>').join("")+'</div>' : "";
+  const trafficHTML = traffic ? '<div class="metric-row"><span class="label">流量</span><div class="bar"><div class="'+pctClass(traffic.pct)+'" style="width:'+traffic.pct+'%"></div></div><span class="val">'+fmtBytes(traffic.used)+' / '+fmtBytes(traffic.limit)+'</span></div>' : "";
   let billingHTML = "";
-  if (meta.price && meta.price > 0) {
-    const cycleMap = { monthly:"/月", quarterly:"/季", semiannually:"/半年",
-                       yearly:"/年", biennially:"/两年", once:"(一次)", lifetime:"(长期)" };
-    const cycle = cycleMap[meta.cycle] || "";
-    const dueText = meta.next_due
-      ? '<span class="' + dueClass(meta.next_due) + '">' + fmtDaysLeft(meta.next_due) + '续费</span>'
-      : "";
-    billingHTML = '<span class="billing">' + (meta.currency || "USD") + " "
-      + meta.price + cycle + '</span> · ' + dueText;
-  } else if (meta.cycle === "lifetime") {
-    billingHTML = '<span class="billing">长期</span>';
-  }
-
-  const tagsHTML = (n.tags||[]).length
-    ? '<div style="margin:2px 0 6px;">' + (n.tags||[]).map(function(t){ return '<span class="tag">' + escapeHTML(t) + '</span>'; }).join("") + '</div>'
-    : "";
-
-  return ''
-    + '<div class="node ' + (n.online ? "" : "offline") + '" onclick="openEdit(' + n.id + ')">'
-    + '<div class="node-head">'
-    + '<div class="node-name"><span class="dot ' + (n.online ? "online" : "") + '"></span>'
-    + escapeHTML(n.name) + '</div>'
-    + '<span style="color:var(--text-dim);font-size:11px;">' + escapeHTML(n.platform || n.os || "") + '</span>'
-    + '</div>'
-    + tagsHTML
-    + noteHTML
-    + '<div class="metric-row"><span class="label">CPU</span>'
-    + '<div class="bar"><div class="' + pctClass(cpuPct) + '" style="width:' + cpuPct + '%"></div></div>'
-    + '<span class="val">' + cpuPct.toFixed(1) + '%</span></div>'
-    + '<div class="metric-row"><span class="label">内存</span>'
-    + '<div class="bar"><div class="' + pctClass(memPct) + '" style="width:' + memPct + '%"></div></div>'
-    + '<span class="val">' + fmtBytes(m.mem_u||0) + ' / ' + fmtBytes(m.mem_t||0) + '</span></div>'
-    + (m.swap_t > 0
-      ? '<div class="metric-row"><span class="label">Swap</span>'
-        + '<div class="bar"><div class="' + pctClass(fmtPct(m.swap_u,m.swap_t)) + '" style="width:' + fmtPct(m.swap_u,m.swap_t) + '%"></div></div>'
-        + '<span class="val">' + fmtBytes(m.swap_u||0) + ' / ' + fmtBytes(m.swap_t||0) + '</span></div>'
-      : '')
-    + '<div class="metric-row"><span class="label">网络</span>'
-    + '<div style="flex:1;font-size:12px;color:var(--text-dim);">'
-    + '↓ ' + fmtSpeed(m.net_in_s||0) + '&nbsp;&nbsp;↑ ' + fmtSpeed(m.net_out_s||0) + '</div></div>'
-    + '<div class="metric-row"><span class="label">探针</span>'
-    + '<div style="flex:1;font-size:12px;color:var(--text-dim);">延迟 ' + latency + '&nbsp;&nbsp;丢包 ' + loss + '</div></div>'
-    + trafficHTML
-    + '<div class="node-foot"><span>' + fmtUptime(m.uptime) + '</span><span>' + billingHTML + '</span></div>'
-    + '</div>';
+  if (meta.price&&meta.price>0) {
+    const cm={monthly:"/月",quarterly:"/季",semiannually:"/半年",yearly:"/年",biennially:"/两年",once:"(一次)",lifetime:"(长期)"};
+    const dueText = meta.next_due ? '<span class="'+dueClass(meta.next_due)+'">'+fmtDaysLeft(meta.next_due)+'续费</span>' : "";
+    billingHTML = '<span class="billing">'+(meta.currency||"USD")+" "+meta.price+(cm[meta.cycle]||"")+'</span> · '+dueText;
+  } else if (meta.cycle==="lifetime") { billingHTML='<span class="billing">长期</span>'; }
+  return '<div class="node'+(n.online?"":" offline")+'" onclick="openNodeDetail('+n.id+')">'
+    +'<div class="node-head">'
+    +'<div class="node-name"><span class="dot'+(n.online?" online pulse":"")+'" ></span>'+escapeHTML(n.name)+'</div>'
+    +'<span class="node-os">'+escapeHTML(n.platform||n.os||"")+'</span>'
+    +'</div>'
+    +tagsHTML+noteHTML
+    +'<div class="metric-row"><span class="label">CPU</span><div class="bar"><div class="'+pctClass(cpuPct)+'" style="width:'+cpuPct+'%"></div></div><span class="val">'+cpuPct.toFixed(1)+'%</span></div>'
+    +'<div class="metric-row"><span class="label">内存</span><div class="bar"><div class="'+pctClass(memPct)+'" style="width:'+memPct+'%"></div></div><span class="val">'+fmtBytes(m.mem_u||0)+' / '+fmtBytes(m.mem_t||0)+'</span></div>'
+    +(m.swap_t>0?'<div class="metric-row"><span class="label">Swap</span><div class="bar"><div class="'+pctClass(fmtPct(m.swap_u,m.swap_t))+'" style="width:'+fmtPct(m.swap_u,m.swap_t)+'%"></div></div><span class="val">'+fmtBytes(m.swap_u||0)+' / '+fmtBytes(m.swap_t||0)+'</span></div>':"")
+    +trafficHTML
+    +'<div class="net-row"><span class="label">网络</span><span>↓ '+fmtSpeed(m.net_in_s||0)+'  ↑ '+fmtSpeed(m.net_out_s||0)+'&nbsp;&nbsp;延迟 '+latency+'  丢包 '+loss+'</span></div>'
+    +'<div class="node-foot"><span>'+fmtUptime(m.uptime)+'</span><span>'+billingHTML+'</span></div>'
+    +'</div>';
 }
 
-function openModal(id) { document.getElementById(id).classList.add("show"); }
-function closeModal(id) { document.getElementById(id).classList.remove("show"); }
+// ===== Modal helpers =====
+function openModal(id){document.getElementById(id).classList.add("show");}
+function closeModal(id){document.getElementById(id).classList.remove("show");}
 
+// ===== Node Detail Popup =====
+async function openNodeDetail(id) {
+  detailId = id;
+  const n = nodes.find(x=>x.id===id);
+  if (!n) return;
+  const m = n.latest||{}, meta = n.meta||{};
+  // Header
+  document.getElementById("detail-dot").className = "dot"+(n.online?" online pulse":"");
+  document.getElementById("detail-name").textContent = n.name;
+  document.getElementById("detail-sub").textContent = [n.platform||n.os||"", n.arch||"", n.cpu_model||""].filter(Boolean).join(" · ");
+  document.getElementById("detail-tags").innerHTML = (n.tags||[]).map(t=>'<span class="tag">'+escapeHTML(t)+'</span>').join("");
+  // Metrics
+  const cpuPct = m.cpu||0, memPct = fmtPct(m.mem_u, m.mem_t);
+  setBar("d-cpu-bar", cpuPct); document.getElementById("d-cpu-val").textContent = cpuPct.toFixed(1)+"%";
+  setBar("d-mem-bar", memPct); document.getElementById("d-mem-val").textContent = fmtBytes(m.mem_u||0)+" / "+fmtBytes(m.mem_t||0);
+  if (m.swap_t>0) {
+    const sp = fmtPct(m.swap_u, m.swap_t);
+    document.getElementById("d-swap-row").style.display = "";
+    setBar("d-swap-bar", sp); document.getElementById("d-swap-val").textContent = fmtBytes(m.swap_u||0)+" / "+fmtBytes(m.swap_t||0);
+  } else { document.getElementById("d-swap-row").style.display = "none"; }
+  document.getElementById("d-uptime").textContent = fmtUptime(m.uptime);
+  document.getElementById("d-load").textContent = m.load1!=null ? (m.load1||0).toFixed(2)+" / "+(m.load5||0).toFixed(2)+" / "+(m.load15||0).toFixed(2) : "-";
+  document.getElementById("d-proc").textContent = m.proc||"-";
+  document.getElementById("d-conn").textContent = (m.tcp||0)+" / "+(m.udp||0);
+  document.getElementById("d-netin").textContent = fmtSpeed(m.net_in_s||0);
+  document.getElementById("d-netout").textContent = fmtSpeed(m.net_out_s||0);
+  document.getElementById("d-latency").textContent = fmtLatency(m.latency_ms||0);
+  document.getElementById("d-loss").textContent = fmtLoss(m.loss_pct||0);
+  // Disks
+  const disks = (m.disks)||[];
+  let diskHtml = disks.map(d=>{
+    const p=fmtPct(d.u,d.t);
+    return '<div class="metric-row" style="margin:4px 0">'
+      +'<span class="label" style="width:auto;max-width:80px;overflow:hidden;text-overflow:ellipsis" title="'+escapeHTML(d.mp)+'">'+escapeHTML(d.mp)+'</span>'
+      +'<div class="bar" style="margin:0 8px"><div class="'+pctClass(p)+'" style="width:'+p+'%"></div></div>'
+      +'<span class="val" style="width:auto;white-space:nowrap">'+fmtBytes(d.u)+'/'+fmtBytes(d.t)+'</span></div>';
+  }).join("");
+  if (m.disks_truncated) diskHtml += '<div style="color:var(--text-dim);font-size:12px;margin-top:4px">还有更多未显示（上限32条）</div>';
+  document.getElementById("d-disk-list").innerHTML = diskHtml || '<div style="color:var(--text-dim);font-size:12px">暂无磁盘数据</div>';
+  // Traffic
+  const traffic = calcTraffic(meta);
+  if (traffic) {
+    document.getElementById("d-traffic-section").style.display = "";
+    setBar("d-traffic-bar", traffic.pct);
+    document.getElementById("d-traffic-val").textContent = fmtBytes(traffic.used)+" / "+fmtBytes(traffic.limit);
+  } else { document.getElementById("d-traffic-section").style.display = "none"; }
+  openModal("modal-detail");
+  // Reset history tabs
+  document.querySelectorAll("#modal-detail .history-tab").forEach((t,i)=>t.classList.toggle("active",i===0));
+  loadDetailHistory("1h", null);
+  // Load probe charts
+  loadDetailProbe(id);
+}
+function setBar(id, pct) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.width = Math.min(100,pct)+"%";
+  el.className = pctClass(pct);
+}
+function openEditFromDetail() {
+  closeModal("modal-detail");
+  openEdit(detailId);
+}
+
+async function loadDetailHistory(range, tabEl) {
+  if (tabEl) {
+    document.querySelectorAll("#modal-detail .history-tab").forEach(t=>t.classList.remove("active"));
+    tabEl.classList.add("active");
+  }
+  try {
+    const data = await api("/api/nodes/"+detailId+"/history?range="+range);
+    const items = (data&&data.items)||[];
+    renderAreaChart("dc-cpu", items, p=>p.cpu, "#4f8cff", 100);
+    renderAreaChart("dc-mem", items, p=>p.mem_t?p.mem_u/p.mem_t*100:0, "#a78bfa", 100);
+    renderAreaChart("dc-netin", items, p=>p.net_in, "#4ade80", 0, "dc-netin-meta", "in");
+    renderAreaChart("dc-netout", items, p=>p.net_out, "#fb923c", 0, "dc-netout-meta", "out");
+  } catch(e) {
+    ["dc-cpu","dc-mem","dc-netin","dc-netout"].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML="";});
+  }
+}
+async function loadDetailProbe(id) {
+  try {
+    const data = await api("/api/nodes/"+id+"/probe-history?minutes=360&step=60&limit=360");
+    const items = (data&&data.items)||[];
+    renderProbeChart("dc-latency","dc-latency-meta",items,"latency_ms","延迟","ms","#4f8cff");
+    renderProbeChart("dc-loss","dc-loss-meta",items,"loss_pct","丢包","%","#f87171");
+  } catch(e) {
+    ["dc-latency","dc-loss"].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML="";});
+  }
+}
+
+// ===== Area chart with gradient fill =====
+function renderAreaChart(chartId, items, valFn, color, maxHint, metaId, netLabel) {
+  const svg = document.getElementById(chartId);
+  if (!svg) return;
+  if (!items||items.length===0){svg.innerHTML="";return;}
+  const values = items.map(valFn);
+  const max = maxHint>0 ? maxHint : Math.max(...values, 1);
+  const W=320, H=80;
+  const pts = values.map((v,i)=>{
+    const x = values.length===1?W/2:(i/(values.length-1))*(W-8)+4;
+    const y = H-4-((Math.min(v,max)/max)*(H-8));
+    return x.toFixed(1)+","+y.toFixed(1);
+  });
+  const lineStr = pts.join(" ");
+  const first = pts[0], last = pts[pts.length-1];
+  const fillPts = first+","+H+" "+lineStr+" "+last.split(",")[0]+","+H;
+  // Convert hex to rgba
+  const fillColor = hexToRgba(color, 0.18);
+  svg.innerHTML = '<polygon fill="'+fillColor+'" points="'+fillPts+'"/>'
+    +'<polyline fill="none" stroke="'+color+'" stroke-width="1.8" points="'+lineStr+'"/>';
+  if (metaId) {
+    const meta = document.getElementById(metaId);
+    if (meta) { const last2=values[values.length-1]||0; meta.textContent=(netLabel||"")+" "+fmtBytes(last2); }
+  }
+}
+function hexToRgba(hex, alpha) {
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return "rgba("+r+","+g+","+b+","+alpha+")";
+}
+function renderProbeChart(chartId, metaId, items, key, label, unit, color) {
+  const svg=document.getElementById(chartId), meta=document.getElementById(metaId);
+  if (!svg||!meta) return;
+  if (!items||items.length===0){svg.innerHTML="";meta.textContent="-";return;}
+  const values = items.map(item=>Number(item[key]||0));
+  const max = Math.max(...values, 1);
+  const W=320, H=100;
+  const pts = items.map((item,idx)=>{
+    const v=Number(item[key]||0);
+    const x=items.length===1?W/2:(idx/(items.length-1))*(W-8)+4;
+    const y=H-8-((v/max)*(H-16));
+    return x.toFixed(1)+","+y.toFixed(1);
+  });
+  const lineStr=pts.join(" ");
+  const fillPts = pts[0]+","+H+" "+lineStr+" "+pts[pts.length-1].split(",")[0]+","+H;
+  svg.innerHTML = '<polygon fill="'+hexToRgba(color,0.15)+'" points="'+fillPts+'"/>'
+    +'<polyline fill="none" stroke="'+color+'" stroke-width="2" points="'+lineStr+'"/>';
+  const lat=values[values.length-1]||0, avg=values.reduce((s,v)=>s+v,0)/values.length;
+  meta.textContent = label+" "+lat.toFixed(1)+unit+" | avg "+avg.toFixed(1)+unit+" | max "+max.toFixed(1)+unit;
+}
+
+// ===== Edit node (from toolbar button or detail popup) =====
 function openAdd() {
   document.getElementById("add-name").value = "";
   document.getElementById("add-result").style.display = "none";
   document.getElementById("add-btn").style.display = "";
   openModal("modal-add");
 }
-
 async function createNode() {
   const name = document.getElementById("add-name").value.trim();
   if (!name) return alert("请输入名称");
   try {
-    const n = await api("/api/nodes", { method: "POST", body: JSON.stringify({ name: name }) });
-    const cmd = await api("/api/install-cmd", {
-      method: "POST",
-      body: JSON.stringify({ node_id: n.id })
-    });
+    const n = await api("/api/nodes", {method:"POST", body:JSON.stringify({name})});
+    const cmd = await api("/api/install-cmd", {method:"POST", body:JSON.stringify({node_id:n.id})});
     document.getElementById("install-cmd").textContent = cmd.linux;
     document.getElementById("add-result").style.display = "";
     document.getElementById("add-btn").style.display = "none";
     loadNodes();
-  } catch (e) { alert("创建失败: " + e.message); }
+  } catch(e) { alert("创建失败: "+e.message); }
 }
-
 async function openEdit(id) {
   if (!_loggedIn) { toggleLoginPopup(); return; }
   editingId = id;
-  const n = nodes.find(function(x){return x.id === id;});
+  const n = nodes.find(x=>x.id===id);
   if (!n) return;
-  const meta = n.meta || {};
-  document.getElementById("edit-title").textContent = "编辑:" + n.name;
+  const meta = n.meta||{};
+  document.getElementById("edit-title").textContent = "编辑: "+n.name;
   document.getElementById("edit-id").value = id;
   document.getElementById("edit-name").value = n.name;
-  document.getElementById("edit-note").value = meta.note || "";
-  document.getElementById("edit-note-visible").checked = meta.note_visible !== false;
-  document.getElementById("edit-price").value = meta.price || "";
-  document.getElementById("edit-currency").value = meta.currency || "USD";
-  document.getElementById("edit-cycle").value = meta.cycle || "monthly";
-  document.getElementById("edit-start").value = meta.start_date
-    ? new Date(meta.start_date*1000).toISOString().slice(0,10) : "";
-  document.getElementById("edit-next-due").value = meta.next_due
-    ? new Date(meta.next_due*1000).toISOString().slice(0,10) : "";
-  document.getElementById("edit-traffic-limit").value =
-    meta.traffic_limit ? (meta.traffic_limit/1024/1024/1024).toFixed(1) : "";
-  document.getElementById("edit-traffic-type").value = meta.traffic_type || "sum";
-  document.getElementById("edit-reset-day").value = meta.traffic_reset_day || 1;
-  document.getElementById("edit-reset-tz").value = meta.traffic_reset_tz || "Asia/Shanghai";
-  document.getElementById("edit-tags").value = (n.tags || []).join(", ");
-  document.getElementById("probe-latency-live").value = fmtLatency((n.latest||{}).latency_ms || 0);
-  document.getElementById("probe-loss-live").value = fmtLoss((n.latest||{}).loss_pct || 0);
-
-  // 自监控节点:隐藏"远程卸载"
+  document.getElementById("edit-tags").value = (n.tags||[]).join(", ");
+  document.getElementById("edit-note").value = meta.note||"";
+  document.getElementById("edit-note-visible").checked = meta.note_visible!==false;
+  document.getElementById("edit-price").value = meta.price||"";
+  document.getElementById("edit-currency").value = meta.currency||"USD";
+  document.getElementById("edit-cycle").value = meta.cycle||"monthly";
+  document.getElementById("edit-start").value = meta.start_date ? new Date(meta.start_date*1000).toISOString().slice(0,10):"";
+  document.getElementById("edit-next-due").value = meta.next_due ? new Date(meta.next_due*1000).toISOString().slice(0,10):"";
+  document.getElementById("edit-traffic-limit").value = meta.traffic_limit?(meta.traffic_limit/1024/1024/1024).toFixed(1):"";
+  document.getElementById("edit-traffic-type").value = meta.traffic_type||"sum";
+  document.getElementById("edit-reset-day").value = meta.traffic_reset_day||1;
+  document.getElementById("edit-reset-tz").value = meta.traffic_reset_tz||"Asia/Shanghai";
   const uninstBtn = document.getElementById("btn-uninstall-node");
-  if (uninstBtn) uninstBtn.style.display = (_selfMonitorNodeId && n.id === _selfMonitorNodeId) ? "none" : "";
-
-  // 磁盘列表
-  const disks = ((n.latest||{}).disks) || [];
-  let diskHtml = "";
-  if (disks.length > 0) {
-    diskHtml = disks.map(function(d) {
-      const pct = fmtPct(d.u, d.t);
-      return '<div class="metric-row"><span class="label" style="width:auto;max-width:160px;overflow:hidden;text-overflow:ellipsis;" title="' + escapeHTML(d.mp) + '">' + escapeHTML(d.mp) + '</span>'
-        + '<div class="bar" style="margin:0 8px;"><div class="' + pctClass(pct) + '" style="width:' + pct + '%"></div></div>'
-        + '<span class="val">' + fmtBytes(d.u) + ' / ' + fmtBytes(d.t) + '</span></div>';
-    }).join("");
-  }
-  if ((n.latest||{}).disks_truncated) {
-    diskHtml += '<div style="color:var(--text-dim);font-size:12px;margin-top:4px;">还有更多挂载点未显示（已达上限 32 条）</div>';
-  }
-  const diskContainer = document.getElementById("edit-disk-list");
-  if (diskContainer) diskContainer.innerHTML = diskHtml;
-
+  if (uninstBtn) uninstBtn.style.display = (_selfMonitorNodeId&&n.id===_selfMonitorNodeId)?"none":"";
+  const disks=((n.latest||{}).disks)||[];
+  let diskHtml="";
+  if (disks.length>0) diskHtml=disks.map(d=>{const p=fmtPct(d.u,d.t);return '<div class="metric-row"><span class="label" style="width:auto;max-width:160px;overflow:hidden;text-overflow:ellipsis" title="'+escapeHTML(d.mp)+'">'+escapeHTML(d.mp)+'</span><div class="bar" style="margin:0 8px"><div class="'+pctClass(p)+'" style="width:'+p+'%"></div></div><span class="val">'+fmtBytes(d.u)+' / '+fmtBytes(d.t)+'</span></div>';}).join("");
+  if ((n.latest||{}).disks_truncated) diskHtml+='<div style="color:var(--text-dim);font-size:12px;margin-top:4px">还有更多未显示（上限32条）</div>';
+  document.getElementById("edit-disk-list").innerHTML = diskHtml;
   openModal("modal-edit");
-  await loadProbeHistory(id);
-  // 重置历史图表标签并加载默认 1h
-  document.querySelectorAll(".history-tab").forEach(function(t,i){ t.classList.toggle("active", i===0); });
-  loadHistory("1h", null);
 }
-
 async function saveNode() {
-  const id = editingId;
-  const name = document.getElementById("edit-name").value.trim();
+  const id=editingId, name=document.getElementById("edit-name").value.trim();
   if (!name) return alert("请输入名称");
-  const tagsRaw = document.getElementById("edit-tags").value.trim();
-  const tags = tagsRaw ? tagsRaw.split(",").map(function(s){ return s.trim(); }).filter(Boolean) : [];
-  await api("/api/nodes/" + id, { method: "PATCH", body: JSON.stringify({ name: name, tags: tags }) });
-  const start = document.getElementById("edit-start").value;
-  const startTs = start ? Math.floor(new Date(start).getTime()/1000) : 0;
-  const limitGB = parseFloat(document.getElementById("edit-traffic-limit").value) || 0;
-  const meta = {
-    note: document.getElementById("edit-note").value,
-    note_visible: document.getElementById("edit-note-visible").checked,
-    price: parseFloat(document.getElementById("edit-price").value) || 0,
-    currency: document.getElementById("edit-currency").value,
-    cycle: document.getElementById("edit-cycle").value,
-    start_date: startTs,
-    auto_renew: true,
-    traffic_limit: Math.floor(limitGB * 1024 * 1024 * 1024),
-    traffic_type: document.getElementById("edit-traffic-type").value,
-    traffic_reset_day: parseInt(document.getElementById("edit-reset-day").value) || 1,
-    traffic_reset_tz: document.getElementById("edit-reset-tz").value,
+  const tagsRaw=document.getElementById("edit-tags").value.trim();
+  const tags=tagsRaw?tagsRaw.split(",").map(s=>s.trim()).filter(Boolean):[];
+  await api("/api/nodes/"+id, {method:"PATCH", body:JSON.stringify({name,tags})});
+  const start=document.getElementById("edit-start").value;
+  const startTs=start?Math.floor(new Date(start).getTime()/1000):0;
+  const limitGB=parseFloat(document.getElementById("edit-traffic-limit").value)||0;
+  const meta={
+    note:document.getElementById("edit-note").value,
+    note_visible:document.getElementById("edit-note-visible").checked,
+    price:parseFloat(document.getElementById("edit-price").value)||0,
+    currency:document.getElementById("edit-currency").value,
+    cycle:document.getElementById("edit-cycle").value,
+    start_date:startTs, auto_renew:true,
+    traffic_limit:Math.floor(limitGB*1024*1024*1024),
+    traffic_type:document.getElementById("edit-traffic-type").value,
+    traffic_reset_day:parseInt(document.getElementById("edit-reset-day").value)||1,
+    traffic_reset_tz:document.getElementById("edit-reset-tz").value,
   };
-  await api("/api/nodes/" + id + "/meta", { method: "PATCH", body: JSON.stringify(meta) });
-  closeModal("modal-edit");
-  loadNodes();
+  await api("/api/nodes/"+id+"/meta", {method:"PATCH", body:JSON.stringify(meta)});
+  closeModal("modal-edit"); loadNodes();
 }
-
 async function deleteNode() {
-  if (!confirm("确定删除此节点?\n(节点配置将丢失,被控本身不会自动卸载)")) return;
-  await api("/api/nodes/" + editingId, { method: "DELETE" });
-  closeModal("modal-edit");
-  loadNodes();
+  if (!confirm("确定删除此节点？（被控本身不会自动卸载）")) return;
+  await api("/api/nodes/"+editingId, {method:"DELETE"});
+  closeModal("modal-edit"); loadNodes();
 }
-
 async function uninstallNode() {
-  if (!confirm("向此节点下发卸载指令?\n被控会自动停止并清理文件。")) return;
-  try {
-    await api("/api/nodes/" + editingId + "/uninstall", { method: "POST" });
-    alert("已下发卸载指令,被控将在几秒内自我卸载。");
-  } catch (e) { alert("失败: " + e.message + "\n(节点可能离线)"); }
+  if (!confirm("向此节点下发卸载指令？")) return;
+  try { await api("/api/nodes/"+editingId+"/uninstall", {method:"POST"}); alert("已下发卸载指令"); }
+  catch(e) { alert("失败: "+e.message); }
 }
-
 async function showInstallCmd() {
-  const n = nodes.find(function(x){return x.id === editingId;});
-  if (!n) return;
+  const n=nodes.find(x=>x.id===editingId); if (!n) return;
+  try { const cmd=await api("/api/install-cmd",{method:"POST",body:JSON.stringify({node_id:n.id})}); alert("安装命令:\n\n"+cmd.linux); }
+  catch(e) { alert(e.message); }
+}
+
+// ===== Notifiers =====
+async function openNotifiers(){document.getElementById("modal-notifiers").classList.add("show");resetNotifierForm();await loadNotifiers();}
+async function loadNotifiers(){
   try {
-    const cmd = await api("/api/install-cmd", {
-      method: "POST",
-      body: JSON.stringify({ node_id: n.id })
-    });
-    alert("被控安装命令:\n\n" + cmd.linux);
-  } catch (e) { alert(e.message); }
+    const list=await api("/api/notifiers"); const box=document.getElementById("notifier-list");
+    if (!list||!list.length){box.innerHTML='<div class="empty"><p>还没有通知渠道</p></div>';return;}
+    box.innerHTML=list.map(n=>{const cfg=JSON.parse(n.config||"{}");const status=n.enabled?'<span style="color:var(--green)">● 启用</span>':'<span style="color:var(--gray)">○ 停用</span>';
+      return '<div class="probe-target-item"><div class="probe-target-head"><b>'+escapeHTML(n.name)+'</b><div>'+status+'</div></div>'
+      +'<div style="color:var(--text-dim);font-size:12px">chat: '+escapeHTML(cfg.chat_id||"-")+'</div>'
+      +'<div style="margin-top:8px;display:flex;gap:6px">'
+      +'<button class="sm" onclick="editNotifier('+n.id+')">编辑</button>'
+      +'<button class="sm" onclick="testNotifierById('+n.id+')">测试</button>'
+      +'<button class="sm danger" onclick="deleteNotifier('+n.id+')">删除</button>'
+      +'</div></div>';}).join("");
+  } catch(e){alert("加载失败: "+e.message);}
 }
+let editingNotifier=null;
+async function editNotifier(id){const list=await api("/api/notifiers");const n=(list||[]).find(x=>x.id===id);if(!n)return;editingNotifier=n;document.getElementById("notifier-id").value=n.id;document.getElementById("notifier-name").value=n.name;document.getElementById("notifier-enabled").checked=n.enabled;const cfg=JSON.parse(n.config||"{}");document.getElementById("notifier-token").value=cfg.bot_token||"";document.getElementById("notifier-chat").value=cfg.chat_id||"";document.getElementById("notifier-thread").value=cfg.thread_id||"";}
+function resetNotifierForm(){editingNotifier=null;document.getElementById("notifier-id").value="0";["notifier-name","notifier-token","notifier-chat","notifier-thread"].forEach(id=>document.getElementById(id).value="");document.getElementById("notifier-enabled").checked=true;}
+async function saveNotifier(){
+  const id=parseInt(document.getElementById("notifier-id").value,10);
+  const payload={name:document.getElementById("notifier-name").value.trim()||"通知渠道",type:"telegram",enabled:document.getElementById("notifier-enabled").checked,config:JSON.stringify({bot_token:document.getElementById("notifier-token").value.trim(),chat_id:document.getElementById("notifier-chat").value.trim(),thread_id:parseInt(document.getElementById("notifier-thread").value,10)||0})};
+  try {if(id>0){await api("/api/notifiers/"+id,{method:"PATCH",body:JSON.stringify(payload)});}else{await api("/api/notifiers",{method:"POST",body:JSON.stringify(payload)});}resetNotifierForm();await loadNotifiers();}catch(e){alert("保存失败: "+e.message);}
+}
+async function deleteNotifier(id){if(!confirm("删除该渠道?"))return;try{await fetch("/api/notifiers/"+id,{method:"DELETE"});await loadNotifiers();}catch(e){alert(e.message);}}
+async function testNotifier(){const id=parseInt(document.getElementById("notifier-id").value,10);if(id===0){alert("请先保存渠道再测试");return;}testNotifierById(id);}
+async function testNotifierById(id){try{await api("/api/notifiers/"+id+"/test",{method:"POST"});alert("测试消息已发送，请去 Telegram 查看");}catch(e){alert("失败: "+e.message);}}
 
-// ===== 通知渠道 =====
+// ===== Alerts =====
+var allNotifiersCache=[];
+async function openAlerts(){document.getElementById("modal-alerts").classList.add("show");resetAlertForm();try{if(!nodes||!nodes.length)await loadNodes();allNotifiersCache=(await api("/api/notifiers"))||[];}catch(e){}fillAlertTargetOptions();fillAlertNotifierChecks();await loadAlerts();}
+function fillAlertTargetOptions(){const sel=document.getElementById("alert-target");let h='<option value="all">全部节点</option>';(nodes||[]).forEach(n=>{h+='<option value="node:'+n.id+'">'+escapeHTML(n.name)+'</option>';});sel.innerHTML=h;}
+function fillAlertNotifierChecks(){const box=document.getElementById("alert-notifier-checks");if(!allNotifiersCache||!allNotifiersCache.length){box.innerHTML='<span style="color:var(--text-dim);font-size:12px">还没有通知渠道</span>';return;}box.innerHTML=allNotifiersCache.map(n=>'<label style="display:block;margin:4px 0;cursor:pointer"><input type="checkbox" data-nid="'+n.id+'"/> '+escapeHTML(n.name)+' <span style="color:var(--text-dim);font-size:12px">'+(n.enabled?'':'(停用)')+'</span></label>').join("");}
+function onAlertKindChange(){const kind=document.getElementById("alert-kind").value,label=document.getElementById("alert-threshold-label"),extra=document.getElementById("alert-extra-field"),thInput=document.getElementById("alert-threshold"),durInput=document.getElementById("alert-duration");extra.style.display="none";switch(kind){case"offline":label.textContent="失联超过(秒)";thInput.value=thInput.value||180;durInput.value=0;break;case"online":label.textContent="(无)";thInput.value=0;durInput.value=0;break;case"cpu":label.textContent="CPU阈值(%)";thInput.value=thInput.value||90;durInput.value=durInput.value||300;break;case"mem":label.textContent="内存阈值(%)";thInput.value=thInput.value||90;durInput.value=durInput.value||300;break;case"disk":label.textContent="磁盘阈值(%)";thInput.value=thInput.value||90;durInput.value=0;break;case"load":label.textContent="Load1阈值";thInput.value=thInput.value||5;durInput.value=durInput.value||300;break;case"traffic":label.textContent="(固定50/80/95/100)";thInput.value=0;durInput.value=0;break;case"due":label.textContent="(默认7,3,1天)";thInput.value=0;durInput.value=0;extra.style.display="block";break;}}
+async function loadAlerts(){try{const list=await api("/api/alerts");const box=document.getElementById("alert-list");if(!list||!list.length){box.innerHTML='<div class="empty"><p>还没有告警规则</p></div>';return;}const kl={offline:"节点离线",online:"首次上线",cpu:"CPU高",mem:"内存高",disk:"磁盘高",load:"负载高",traffic:"流量阈值",due:"续费提醒"};box.innerHTML=list.map(r=>{const status=r.enabled?'<span style="color:var(--green)">● 启用</span>':'<span style="color:var(--gray)">○ 停用</span>';const ids=JSON.parse(r.notifier_ids||"[]");const target=r.target==="all"?"全部节点":r.target;return '<div class="probe-target-item"><div class="probe-target-head"><b>'+escapeHTML(r.name)+'</b><div>'+status+'</div></div><div style="color:var(--text-dim);font-size:12px">'+(kl[r.kind]||r.kind)+' · 阈值 '+r.threshold+(r.duration>0?' · 持续 '+r.duration+'s':'')+" · "+escapeHTML(target)+" · 通知 "+ids.length+"个</div>"+'<div style="margin-top:8px;display:flex;gap:6px"><button class="sm" onclick="editAlert('+r.id+')">编辑</button><button class="sm" onclick="testAlert('+r.id+')">测试</button><button class="sm danger" onclick="deleteAlert('+r.id+')">删除</button></div></div>';}).join("");}catch(e){alert("加载失败: "+e.message);}}
+async function editAlert(id){const list=await api("/api/alerts");const r=(list||[]).find(x=>x.id===id);if(!r)return;document.getElementById("alert-id").value=r.id;document.getElementById("alert-name").value=r.name;document.getElementById("alert-kind").value=r.kind;document.getElementById("alert-threshold").value=r.threshold;document.getElementById("alert-duration").value=r.duration;document.getElementById("alert-cooldown").value=r.cooldown;document.getElementById("alert-cooldown-hint").textContent=r.cooldown>0?(Math.round(r.cooldown/60*10)/10)+"分钟":"";document.getElementById("alert-target").value=r.target;document.getElementById("alert-silent-from").value=r.silent_from||"";document.getElementById("alert-silent-to").value=r.silent_to||"";document.getElementById("alert-enabled").checked=r.enabled;try{const ex=JSON.parse(r.extra||"{}");if(ex.days)document.getElementById("alert-extra-days").value=ex.days.join(",");}catch(e){}onAlertKindChange();const ids=JSON.parse(r.notifier_ids||"[]");document.querySelectorAll('#alert-notifier-checks input[data-nid]').forEach(c=>{c.checked=ids.indexOf(parseInt(c.getAttribute('data-nid'),10))>=0;});}
+function resetAlertForm(){document.getElementById("alert-id").value="0";document.getElementById("alert-name").value="";document.getElementById("alert-kind").value="offline";document.getElementById("alert-threshold").value=180;document.getElementById("alert-duration").value=0;document.getElementById("alert-cooldown").value=1800;document.getElementById("alert-cooldown-hint").textContent="30分钟";document.getElementById("alert-target").value="all";document.getElementById("alert-silent-from").value="";document.getElementById("alert-silent-to").value="";document.getElementById("alert-extra-days").value="";document.getElementById("alert-enabled").checked=true;document.querySelectorAll('#alert-notifier-checks input[data-nid]').forEach(c=>c.checked=false);onAlertKindChange();}
+async function saveAlert(){const id=parseInt(document.getElementById("alert-id").value,10);const notifierIds=[];document.querySelectorAll('#alert-notifier-checks input[data-nid]:checked').forEach(c=>notifierIds.push(parseInt(c.getAttribute('data-nid'),10)));const kind=document.getElementById("alert-kind").value;let extra="{}";if(kind==="due"){const daysStr=document.getElementById("alert-extra-days").value.trim();const days=daysStr.split(",").map(s=>parseInt(s.trim(),10)).filter(n=>n>0);if(days.length>0)extra=JSON.stringify({days});}const payload={name:document.getElementById("alert-name").value.trim()||"未命名规则",kind,threshold:parseFloat(document.getElementById("alert-threshold").value)||0,duration:parseInt(document.getElementById("alert-duration").value,10)||0,cooldown:parseInt(document.getElementById("alert-cooldown").value,10)||1800,target:document.getElementById("alert-target").value,silent_from:document.getElementById("alert-silent-from").value.trim(),silent_to:document.getElementById("alert-silent-to").value.trim(),extra,notifier_ids:JSON.stringify(notifierIds),enabled:document.getElementById("alert-enabled").checked};try{if(id>0){await api("/api/alerts/"+id,{method:"PATCH",body:JSON.stringify(payload)});}else{await api("/api/alerts",{method:"POST",body:JSON.stringify(payload)});}resetAlertForm();await loadAlerts();}catch(e){alert("保存失败: "+e.message);}}
+async function deleteAlert(id){if(!confirm("删除该规则?"))return;try{await fetch("/api/alerts/"+id,{method:"DELETE"});await loadAlerts();}catch(e){alert(e.message);}}
+async function testAlert(id){try{await api("/api/alerts/"+id+"/test",{method:"POST"});alert("测试消息已发送");}catch(e){alert("失败: "+e.message);}}
 
-async function loadProbeHistory(id) {
+// ===== Settings =====
+async function loadConfig(){try{const cfg=await api("/api/config");if(cfg&&cfg.panel_title){document.title=cfg.panel_title;const h=document.getElementById("panel-title");if(h)h.textContent=cfg.panel_title;}if(cfg&&cfg.self_monitor_node_id)_selfMonitorNodeId=cfg.self_monitor_node_id;if(cfg&&cfg.public_enabled!==undefined){const el=document.getElementById("settings-public");if(el)el.checked=cfg.public_enabled;}}catch(e){}}
+function setTheme(t){document.documentElement.dataset.theme=t;localStorage.setItem("theme",t);["dark","light","blue"].forEach(n=>{const el=document.getElementById("theme-"+n);if(el)el.classList.toggle("active",n===t);});}
+(function(){setTheme(localStorage.getItem("theme")||"dark");})();
+function openSettings(){openModal("modal-settings");switchSettingsTab("general",document.querySelector(".settings-tab.active"));const cfg_title=document.getElementById("settings-title");const h=document.getElementById("panel-title");if(cfg_title&&h)cfg_title.value=h.textContent;load2FAStatus();try{api("/api/config").then(cfg=>{if(cfg&&cfg.public_enabled!==undefined){const el=document.getElementById("settings-public");if(el)el.checked=cfg.public_enabled;}});}catch(e){}}
+function switchSettingsTab(name,el){document.querySelectorAll(".settings-tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll(".settings-panel").forEach(p=>p.classList.remove("active"));if(el)el.classList.add("active");const panel=document.getElementById("settings-"+name);if(panel){panel.classList.add("active");if(name==="audit")loadAuditLog();}}
+async function saveGeneralSettings(){const payload={};const t=document.getElementById("settings-title").value.trim();if(t)payload.panel_title=t;const c=document.getElementById("settings-currency").value.trim();if(c)payload.main_currency=c;payload.public_enabled=document.getElementById("settings-public").checked;try{await api("/api/config",{method:"PATCH",body:JSON.stringify(payload)});if(payload.panel_title){document.title=payload.panel_title;document.getElementById("panel-title").textContent=payload.panel_title;}alert("已保存");}catch(e){alert("保存失败: "+e.message);}}
+async function load2FAStatus(){try{const s=await api("/api/2fa/status");const btn=document.getElementById("tfa-toggle-btn");const statusText=document.getElementById("tfa-status-text");const disableSection=document.getElementById("tfa-disable-section");if(s.enabled){statusText.innerHTML='<span style="color:var(--green)">● 两步验证已启用</span>';btn.textContent="关闭两步验证";btn.classList.add("danger");}else{statusText.innerHTML='<span style="color:var(--text-dim)">○ 两步验证未启用</span>';btn.textContent="启用两步验证";btn.classList.remove("danger");disableSection.style.display="none";}}catch(e){}}
+async function toggle2FA(){try{const s=await api("/api/2fa/status");if(s.enabled){document.getElementById("tfa-disable-section").style.display="block";}else{const r=await api("/api/2fa/enable",{method:"POST"});document.getElementById("tfa-secret").value=r.secret||"";document.getElementById("tfa-uri").value=r.uri||"";document.getElementById("tfa-setup-section").style.display="block";document.getElementById("tfa-enable-btn-row").style.display="none";}}catch(e){alert(e.message);}}
+function cancel2FASetup(){document.getElementById("tfa-setup-section").style.display="none";document.getElementById("tfa-enable-btn-row").style.display="block";}
+async function verify2FA(){const code=document.getElementById("tfa-code").value.trim();if(code.length!==6){alert("请输入6位验证码");return;}try{await api("/api/2fa/verify",{method:"POST",body:JSON.stringify({code})});alert("两步验证已启用");document.getElementById("tfa-setup-section").style.display="none";document.getElementById("tfa-enable-btn-row").style.display="block";load2FAStatus();}catch(e){alert("验证失败: "+e.message);}}
+async function disable2FA(){const pw=document.getElementById("tfa-disable-pw").value;if(!pw){alert("请输入密码");return;}try{await api("/api/2fa/disable",{method:"POST",body:JSON.stringify({password:pw})});alert("两步验证已关闭");document.getElementById("tfa-disable-section").style.display="none";document.getElementById("tfa-disable-pw").value="";load2FAStatus();}catch(e){alert("操作失败: "+e.message);}}
+async function loadAuditLog(){const container=document.getElementById("audit-list-container");if(!container)return;try{const data=await api("/api/audit-log?limit=100");const items=data.items||[];if(!items.length){container.innerHTML='<div style="color:var(--text-dim);font-size:13px">暂无记录</div>';return;}const al={update_node:"修改节点",delete_node:"删除节点",update_config:"修改配置",enable_2fa:"开启2FA",disable_2fa:"关闭2FA",backup_import:"导入备份",uninstall_all:"全员卸载"};container.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1px solid var(--border);color:var(--text-dim)"><th style="text-align:left;padding:6px 8px">时间</th><th style="text-align:left;padding:6px 8px">操作</th><th style="text-align:left;padding:6px 8px">目标</th><th style="text-align:left;padding:6px 8px">IP</th></tr></thead><tbody>'+items.map(e=>'<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text-dim)">'+escapeHTML(new Date(e.ts*1000).toLocaleString("zh-CN"))+'</td><td style="padding:5px 8px">'+escapeHTML(al[e.action]||e.action)+'</td><td style="padding:5px 8px">'+escapeHTML(e.target)+'</td><td style="padding:5px 8px;color:var(--text-dim)">'+escapeHTML(e.ip)+'</td></tr>').join("")+'</tbody></table></div>';}catch(e){container.innerHTML='<div style="color:var(--red)">加载失败: '+escapeHTML(e.message)+'</div>';}}
+async function importBackup(input){const file=input.files[0];if(!file)return;const status=document.getElementById("backup-import-status");status.textContent="导入中…";try{const text=await file.text();await api("/api/backup/import",{method:"POST",body:text});status.style.color="var(--green)";status.textContent="✓ 导入成功，页面将刷新…";setTimeout(()=>location.reload(),1500);}catch(e){status.style.color="var(--red)";status.textContent="✗ 导入失败: "+e.message;}input.value="";}
+async function uninstallAll(){const c=prompt('确认操作：请输入 "UNINSTALL ALL"');if(c!=="UNINSTALL ALL"){alert("取消");return;}try{const r=await api("/api/uninstall-all",{method:"POST"});alert("已向 "+r.count+" 个节点发送卸载指令");}catch(e){alert("失败: "+e.message);}}
+async function renamePanel(){if(!_loggedIn){toggleLoginPopup();return;}const cur=document.getElementById("panel-title").textContent;const next=prompt("修改面板标题（最多60字符）:",cur);if(next===null)return;const t=next.trim();if(t===cur)return;try{const r=await api("/api/config",{method:"PATCH",body:JSON.stringify({panel_title:t})});if(r&&r.panel_title){document.title=r.panel_title;document.getElementById("panel-title").textContent=r.panel_title;}}catch(e){alert("保存失败: "+e.message);}}
+
+// ===== Probe management =====
+async function openProbes(){
+  resetProbeForm();
+  fillProbeNodeChecks();
+  await loadProbeTargets();
+  openModal("modal-probe");
+}
+async function loadProbeTargets(){
   try {
-    const data = await api("/api/nodes/" + id + "/probe-history?minutes=360&step=60&limit=360");
-    const items = (data && data.items) || [];
-    renderProbeChart("probe-latency-chart", "probe-latency-meta", items, "latency_ms", "Latency", "ms", "#4f8cff");
-    renderProbeChart("probe-loss-chart", "probe-loss-meta", items, "loss_pct", "Loss", "%", "#f87171");
-  } catch (e) {
-    renderProbeEmpty("probe-latency-chart", "probe-latency-meta");
-    renderProbeEmpty("probe-loss-chart", "probe-loss-meta");
-  }
-}
-
-async function loadHistory(range, tabEl) {
-  if (tabEl) {
-    document.querySelectorAll(".history-tab").forEach(function(t){ t.classList.remove("active"); });
-    tabEl.classList.add("active");
-  }
-  try {
-    const data = await api("/api/nodes/" + editingId + "/history?range=" + range);
-    const items = (data && data.items) || [];
-    renderHistoryChart("hist-cpu-chart", items, function(p){ return p.cpu; }, "#4f8cff", 100);
-    renderHistoryChart("hist-mem-chart", items, function(p){ return p.mem_t ? p.mem_u/p.mem_t*100 : 0; }, "#a78bfa", 100);
-    renderHistoryChart("hist-netin-chart", items, function(p){ return p.net_in; }, "#4ade80", 0, "hist-netin-meta", "in");
-    renderHistoryChart("hist-netout-chart", items, function(p){ return p.net_out; }, "#fb923c", 0, "hist-netout-meta", "out");
-  } catch(e) {
-    ["hist-cpu-chart","hist-mem-chart","hist-netin-chart","hist-netout-chart"].forEach(function(id){
-      const el = document.getElementById(id);
-      if (el) el.innerHTML = "";
-    });
-  }
-}
-
-function renderHistoryChart(chartId, items, valFn, color, maxHint, metaId, netLabel) {
-  const svg = document.getElementById(chartId);
-  if (!svg) return;
-  if (!items || items.length === 0) { svg.innerHTML = ""; return; }
-  const values = items.map(valFn);
-  const max = maxHint > 0 ? maxHint : Math.max.apply(null, values.concat([1]));
-  const w = 320, h = 100;
-  const pts = values.map(function(v, i){
-    const x = values.length === 1 ? w/2 : (i/(values.length-1))*(w-8)+4;
-    const y = h - 4 - ((Math.min(v, max)/max) * (h - 8));
-    return x.toFixed(1) + "," + y.toFixed(1);
-  }).join(" ");
-  svg.innerHTML = '<polyline fill="none" stroke="' + color + '" stroke-width="2" points="' + pts + '"></polyline>';
-  if (metaId) {
-    const meta = document.getElementById(metaId);
-    if (meta) {
-      const last = values[values.length-1]||0;
-      meta.textContent = (netLabel||"") + " " + fmtBytes(last);
-    }
-  }
-}
-
-function renderProbeEmpty(chartId, metaId) {
-  const svg = document.getElementById(chartId);
-  const meta = document.getElementById(metaId);
-  if (svg) svg.innerHTML = "";
-  if (meta) meta.textContent = "-";
-}
-
-function renderProbeChart(chartId, metaId, items, key, label, unit, color) {
-  const svg = document.getElementById(chartId);
-  const meta = document.getElementById(metaId);
-  if (!svg || !meta) return;
-  if (!items || items.length === 0) {
-    renderProbeEmpty(chartId, metaId);
-    return;
-  }
-  const values = items.map(function(item){ return Number(item[key] || 0); });
-  const max = Math.max.apply(null, values.concat([1]));
-  const width = 320;
-  const height = 140;
-  const points = items.map(function(item, idx) {
-    const value = Number(item[key] || 0);
-    const x = items.length === 1 ? width / 2 : (idx / (items.length - 1)) * (width - 8) + 4;
-    const y = height - 8 - ((value / max) * (height - 16));
-    return x.toFixed(1) + "," + y.toFixed(1);
-  }).join(" ");
-  const latest = values[values.length - 1] || 0;
-  const avg = values.reduce(function(sum, value){ return sum + value; }, 0) / values.length;
-  svg.innerHTML = '<polyline fill="none" stroke="' + color + '" stroke-width="2.5" points="' + points + '"></polyline>';
-  meta.textContent = label + " now " + latest.toFixed(1) + unit + " | avg " + avg.toFixed(1) + unit + " | max " + max.toFixed(1) + unit;
-}
-
-async function openNotifiers() {
-  document.getElementById("modal-notifiers").classList.add("show");
-  resetNotifierForm();
-  await loadNotifiers();
-}
-
-async function loadNotifiers() {
-  try {
-    const list = await api("/api/notifiers");
-    const box = document.getElementById("notifier-list");
-    if (!list || list.length === 0) {
-      box.innerHTML = '<div class="empty"><p>还没有通知渠道</p></div>';
-      return;
-    }
-    box.innerHTML = list.map(function(n) {
-      const cfg = JSON.parse(n.config || "{}");
-      const chat = cfg.chat_id || "-";
-      const status = n.enabled ? '<span style="color:var(--green)">●</span> 启用' : '<span style="color:var(--gray)">○</span> 停用';
-      return '<div class="node" style="cursor:default;padding:10px 12px;">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-        '<div><b>' + escapeHTML(n.name) + '</b> <span style="color:var(--text-dim);font-size:12px;">' + n.type + '</span></div>' +
-        '<div>' + status + '</div>' +
-        '</div>' +
-        '<div style="color:var(--text-dim);font-size:12px;margin-top:4px;">chat: ' + escapeHTML(chat) + '</div>' +
-        '<div style="margin-top:8px;display:flex;gap:8px;">' +
-        '<button onclick="editNotifier(' + n.id + ')">编辑</button>' +
-        '<button onclick="testNotifierById(' + n.id + ')">测试推送</button>' +
-        '<button class="danger" onclick="deleteNotifier(' + n.id + ')">删除</button>' +
-        '</div></div>';
+    const list = await api("/api/probe-targets");
+    const box = document.getElementById("probe-target-list");
+    if (!list||!list.length){box.innerHTML='<div class="empty"><p>还没有探针目标，在下方添加</p></div>';return;}
+    box.innerHTML = list.map(t=>{
+      const protos = t.proto==="both"?["icmp","tcp"]:t.proto==="icmp"?["icmp"]:["tcp"];
+      const badges = protos.map(p=>'<span class="probe-badge '+p+'">'+p.toUpperCase()+'</span>').join("");
+      let nodeNames="";
+      try{const ids=JSON.parse(t.node_ids||"[]");nodeNames=ids.map(id=>{const n=nodes.find(x=>x.id===id);return n?'<span class="tag">'+escapeHTML(n.name)+'</span>':'';}).join("");}catch(e){}
+      const status=t.enabled?'<span style="color:var(--green)">●</span>':'<span style="color:var(--gray)">○</span>';
+      return '<div class="probe-target-item">'
+        +'<div class="probe-target-head"><div><span style="margin-right:6px">'+status+'</span><b>'+escapeHTML(t.name||t.ip)+'</b> <span style="color:var(--text-dim);font-size:12px">'+escapeHTML(t.ip)+(t.port>0?":"+t.port:"")+'</span></div>'
+        +'<div>'+badges+'</div></div>'
+        +(nodeNames?'<div style="margin-top:5px">'+nodeNames+'</div>':'')
+        +'<div style="margin-top:8px;display:flex;gap:6px">'
+        +'<button class="sm" onclick="viewProbeResults('+t.id+',\''+escapeHTML(t.name||t.ip)+'\')">查看结果</button>'
+        +'<button class="sm" onclick="editProbeTarget('+t.id+')">编辑</button>'
+        +'<button class="sm danger" onclick="deleteProbeTarget('+t.id+')">删除</button>'
+        +'</div></div>';
     }).join("");
-  } catch (e) {
-    alert("加载失败: " + e.message);
-  }
+  } catch(e){alert("加载失败: "+e.message);}
 }
-
-let editingNotifier = null;
-
-async function editNotifier(id) {
-  const list = await api("/api/notifiers");
-  const n = (list || []).find(function(x){return x.id === id;});
-  if (!n) return;
-  editingNotifier = n;
-  document.getElementById("notifier-id").value = n.id;
-  document.getElementById("notifier-name").value = n.name;
-  document.getElementById("notifier-enabled").checked = n.enabled;
-  const cfg = JSON.parse(n.config || "{}");
-  document.getElementById("notifier-token").value = cfg.bot_token || "";
-  document.getElementById("notifier-chat").value = cfg.chat_id || "";
-  document.getElementById("notifier-thread").value = cfg.thread_id || "";
+function fillProbeNodeChecks(){
+  const box=document.getElementById("probe-node-checks");
+  if(!nodes||!nodes.length){box.innerHTML='<span style="color:var(--text-dim);font-size:12px">还没有节点</span>';return;}
+  box.innerHTML=nodes.map(n=>'<label style="display:inline-flex;align-items:center;gap:5px;margin:3px 8px 3px 0;cursor:pointer"><input type="checkbox" data-probe-nid="'+n.id+'"/> '+escapeHTML(n.name)+(n.online?'<span class="dot online" style="width:6px;height:6px"></span>':'')+'</label>').join("");
 }
-
-function resetNotifierForm() {
-  editingNotifier = null;
-  document.getElementById("notifier-id").value = "0";
-  document.getElementById("notifier-name").value = "";
-  document.getElementById("notifier-token").value = "";
-  document.getElementById("notifier-chat").value = "";
-  document.getElementById("notifier-thread").value = "";
-  document.getElementById("notifier-enabled").checked = true;
+async function editProbeTarget(id){
+  try {
+    const list=await api("/api/probe-targets");
+    const t=(list||[]).find(x=>x.id===id); if(!t)return;
+    document.getElementById("probe-id").value=t.id;
+    document.getElementById("probe-name").value=t.name||"";
+    document.getElementById("probe-ip").value=t.ip;
+    document.getElementById("probe-port").value=t.port||0;
+    document.getElementById("probe-proto").value=t.proto||"icmp";
+    document.getElementById("probe-enabled").checked=t.enabled;
+    const ids=JSON.parse(t.node_ids||"[]");
+    document.querySelectorAll('#probe-node-checks input[data-probe-nid]').forEach(c=>{
+      c.checked=ids.indexOf(parseInt(c.getAttribute('data-probe-nid'),10))>=0;
+    });
+  } catch(e){alert(e.message);}
 }
-
-async function saveNotifier() {
-  const id = parseInt(document.getElementById("notifier-id").value, 10);
-  const payload = {
-    name: document.getElementById("notifier-name").value.trim() || "通知渠道",
-    type: "telegram",
-    enabled: document.getElementById("notifier-enabled").checked,
-    config: JSON.stringify({
-      bot_token: document.getElementById("notifier-token").value.trim(),
-      chat_id: document.getElementById("notifier-chat").value.trim(),
-      thread_id: parseInt(document.getElementById("notifier-thread").value, 10) || 0
-    })
+function resetProbeForm(){
+  document.getElementById("probe-id").value="0";
+  ["probe-name","probe-ip"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("probe-port").value="0";
+  document.getElementById("probe-proto").value="icmp";
+  document.getElementById("probe-enabled").checked=true;
+  document.querySelectorAll('#probe-node-checks input[data-probe-nid]').forEach(c=>c.checked=false);
+}
+async function saveProbeTarget(){
+  const id=parseInt(document.getElementById("probe-id").value,10);
+  const ip=document.getElementById("probe-ip").value.trim();
+  if(!ip){alert("请输入目标IP/域名");return;}
+  const nodeIds=[];
+  document.querySelectorAll('#probe-node-checks input[data-probe-nid]:checked').forEach(c=>nodeIds.push(parseInt(c.getAttribute('data-probe-nid'),10)));
+  const payload={
+    name:document.getElementById("probe-name").value.trim()||ip,
+    ip, port:parseInt(document.getElementById("probe-port").value)||0,
+    proto:document.getElementById("probe-proto").value,
+    node_ids:JSON.stringify(nodeIds),
+    enabled:document.getElementById("probe-enabled").checked,
   };
   try {
-    if (id > 0) {
-      await api("/api/notifiers/" + id, { method: "PATCH", body: JSON.stringify(payload) });
-    } else {
-      await api("/api/notifiers", { method: "POST", body: JSON.stringify(payload) });
-    }
-    resetNotifierForm();
-    await loadNotifiers();
-  } catch (e) {
-    alert("保存失败: " + e.message);
-  }
+    if(id>0){await api("/api/probe-targets/"+id,{method:"PATCH",body:JSON.stringify(payload)});}
+    else{await api("/api/probe-targets",{method:"POST",body:JSON.stringify(payload)});}
+    resetProbeForm(); await loadProbeTargets();
+  } catch(e){alert("保存失败: "+e.message);}
 }
+async function deleteProbeTarget(id){if(!confirm("删除该探针目标及其历史数据？"))return;try{await fetch("/api/probe-targets/"+id,{method:"DELETE"});await loadProbeTargets();}catch(e){alert(e.message);}}
 
-async function deleteNotifier(id) {
-  if (!confirm("删除该通知渠道?")) return;
+// Probe results view
+async function viewProbeResults(targetId, targetName){
+  _viewingProbeTargetId=targetId;
+  document.getElementById("probe-results-title").textContent="结果: "+targetName;
+  document.getElementById("probe-results-view").style.display="";
+  document.querySelectorAll("#probe-results-view .history-tab").forEach((t,i)=>t.classList.toggle("active",i===0));
+  await loadProbeResultsView("1h",null);
+}
+async function loadProbeResultsView(range,tabEl){
+  if(tabEl){document.querySelectorAll("#probe-results-view .history-tab").forEach(t=>t.classList.remove("active"));tabEl.classList.add("active");}
   try {
-    await fetch("/api/notifiers/" + id, { method: "DELETE" });
-    await loadNotifiers();
-  } catch (e) { alert(e.message); }
-}
-
-async function testNotifier() {
-  // 表单测试:先保存当前编辑,再测
-  const id = parseInt(document.getElementById("notifier-id").value, 10);
-  if (id === 0) {
-    alert("请先保存渠道再测试");
-    return;
-  }
-  testNotifierById(id);
-}
-
-async function testNotifierById(id) {
-  try {
-    await api("/api/notifiers/" + id + "/test", { method: "POST" });
-    alert("测试消息已发送,请去 Telegram 查看");
-  } catch (e) {
-    alert("失败: " + e.message);
-  }
-}
-
-// ===== 告警规则 =====
-
-let allNotifiersCache = [];
-
-async function openAlerts() {
-  document.getElementById("modal-alerts").classList.add("show");
-  resetAlertForm();
-  // 拉一次节点列表 + 通知渠道,填到表单里
-  try {
-    if (!nodes || nodes.length === 0) await loadNodes();
-    allNotifiersCache = (await api("/api/notifiers")) || [];
-  } catch(e) {}
-  fillAlertTargetOptions();
-  fillAlertNotifierChecks();
-  await loadAlerts();
-}
-
-function fillAlertTargetOptions() {
-  const sel = document.getElementById("alert-target");
-  let html = '<option value="all">全部节点</option>';
-  (nodes || []).forEach(function(n){
-    html += '<option value="node:' + n.id + '">' + escapeHTML(n.name) + '</option>';
-  });
-  sel.innerHTML = html;
-}
-
-function fillAlertNotifierChecks() {
-  const box = document.getElementById("alert-notifier-checks");
-  if (!allNotifiersCache || allNotifiersCache.length === 0) {
-    box.innerHTML = '<span style="color:var(--text-dim);font-size:12px;">还没有通知渠道,先去"通知渠道"创建一个</span>';
-    return;
-  }
-  box.innerHTML = allNotifiersCache.map(function(n){
-    return '<label style="display:block;margin:4px 0;">' +
-      '<input type="checkbox" data-nid="' + n.id + '" /> ' + escapeHTML(n.name) +
-      ' <span style="color:var(--text-dim);font-size:12px;">' + (n.enabled?'':'(停用)') + '</span></label>';
-  }).join("");
-}
-
-function onAlertKindChange() {
-  const kind = document.getElementById("alert-kind").value;
-  const label = document.getElementById("alert-threshold-label");
-  const extra = document.getElementById("alert-extra-field");
-  const thInput = document.getElementById("alert-threshold");
-  const durInput = document.getElementById("alert-duration");
-  extra.style.display = "none";
-  switch (kind) {
-    case "offline":
-      label.textContent = "失联超过(秒)";
-      thInput.value = thInput.value || 180;
-      durInput.value = 0;
-      break;
-    case "online":
-      label.textContent = "(无)";
-      thInput.value = 0;
-      durInput.value = 0;
-      break;
-    case "cpu":
-      label.textContent = "CPU 阈值 (%)";
-      thInput.value = thInput.value || 90;
-      durInput.value = durInput.value || 300;
-      break;
-    case "mem":
-      label.textContent = "内存阈值 (%)";
-      thInput.value = thInput.value || 90;
-      durInput.value = durInput.value || 300;
-      break;
-    case "disk":
-      label.textContent = "磁盘阈值 (%)";
-      thInput.value = thInput.value || 90;
-      durInput.value = 0;
-      break;
-    case "load":
-      label.textContent = "Load1 阈值";
-      thInput.value = thInput.value || 5;
-      durInput.value = durInput.value || 300;
-      break;
-    case "traffic":
-      label.textContent = "(固定 50/80/95/100)";
-      thInput.value = 0;
-      durInput.value = 0;
-      break;
-    case "due":
-      label.textContent = "(默认 7,3,1 天)";
-      thInput.value = 0;
-      durInput.value = 0;
-      extra.style.display = "block";
-      break;
-  }
-}
-
-async function loadAlerts() {
-  try {
-    const list = await api("/api/alerts");
-    const box = document.getElementById("alert-list");
-    if (!list || list.length === 0) {
-      box.innerHTML = '<div class="empty"><p>还没有告警规则</p></div>';
-      return;
-    }
-    const kindLabels = {
-      offline:"节点离线", online:"首次上线", cpu:"CPU 高", mem:"内存高",
-      disk:"磁盘高", load:"负载高", traffic:"流量阈值", due:"续费提醒"
-    };
-    box.innerHTML = list.map(function(r){
-      const status = r.enabled ? '<span style="color:var(--green)">●</span> 启用' : '<span style="color:var(--gray)">○</span> 停用';
-      const ids = JSON.parse(r.notifier_ids || "[]");
-      const target = r.target === "all" ? "全部节点" : r.target;
-      return '<div class="node" style="cursor:default;padding:10px 12px;">' +
-        '<div style="display:flex;justify-content:space-between;">' +
-        '<b>' + escapeHTML(r.name) + '</b><div>' + status + '</div></div>' +
-        '<div style="color:var(--text-dim);font-size:12px;margin-top:4px;">' +
-        (kindLabels[r.kind] || r.kind) + ' · 阈值 ' + r.threshold +
-        (r.duration > 0 ? ' · 持续 ' + r.duration + 's' : '') +
-        ' · 目标 ' + escapeHTML(target) + ' · 通知 ' + ids.length + ' 个</div>' +
-        '<div style="margin-top:8px;display:flex;gap:8px;">' +
-        '<button onclick="editAlert(' + r.id + ')">编辑</button>' +
-        '<button onclick="testAlert(' + r.id + ')">测试触发</button>' +
-        '<button class="danger" onclick="deleteAlert(' + r.id + ')">删除</button>' +
-        '</div></div>';
-    }).join("");
-  } catch (e) {
-    alert("加载失败: " + e.message);
-  }
-}
-
-async function editAlert(id) {
-  const list = await api("/api/alerts");
-  const r = (list || []).find(function(x){return x.id === id;});
-  if (!r) return;
-  document.getElementById("alert-id").value = r.id;
-  document.getElementById("alert-name").value = r.name;
-  document.getElementById("alert-kind").value = r.kind;
-  document.getElementById("alert-threshold").value = r.threshold;
-  document.getElementById("alert-duration").value = r.duration;
-  document.getElementById("alert-cooldown").value = r.cooldown;
-  document.getElementById("alert-cooldown-hint").textContent = r.cooldown > 0 ? (Math.round(r.cooldown/60*10)/10) + "分钟" : "";
-  document.getElementById("alert-target").value = r.target;
-  document.getElementById("alert-silent-from").value = r.silent_from || "";
-  document.getElementById("alert-silent-to").value = r.silent_to || "";
-  document.getElementById("alert-enabled").checked = r.enabled;
-  // extra days
-  try {
-    const ex = JSON.parse(r.extra || "{}");
-    if (ex.days) document.getElementById("alert-extra-days").value = ex.days.join(",");
-  } catch(e) {}
-  onAlertKindChange();
-  // 勾选通知渠道
-  const ids = JSON.parse(r.notifier_ids || "[]");
-  document.querySelectorAll('#alert-notifier-checks input[data-nid]').forEach(function(c){
-    c.checked = ids.indexOf(parseInt(c.getAttribute('data-nid'), 10)) >= 0;
-  });
-}
-
-function resetAlertForm() {
-  document.getElementById("alert-id").value = "0";
-  document.getElementById("alert-name").value = "";
-  document.getElementById("alert-kind").value = "offline";
-  document.getElementById("alert-threshold").value = 180;
-  document.getElementById("alert-duration").value = 0;
-  document.getElementById("alert-cooldown").value = 1800;
-  document.getElementById("alert-cooldown-hint").textContent = "30分钟";
-  document.getElementById("alert-target").value = "all";
-  document.getElementById("alert-silent-from").value = "";
-  document.getElementById("alert-silent-to").value = "";
-  document.getElementById("alert-extra-days").value = "";
-  document.getElementById("alert-enabled").checked = true;
-  document.querySelectorAll('#alert-notifier-checks input[data-nid]').forEach(function(c){c.checked = false;});
-  onAlertKindChange();
-}
-
-async function saveAlert() {
-  const id = parseInt(document.getElementById("alert-id").value, 10);
-  const notifierIds = [];
-  document.querySelectorAll('#alert-notifier-checks input[data-nid]:checked').forEach(function(c){
-    notifierIds.push(parseInt(c.getAttribute('data-nid'), 10));
-  });
-  const kind = document.getElementById("alert-kind").value;
-  let extra = "{}";
-  if (kind === "due") {
-    const daysStr = document.getElementById("alert-extra-days").value.trim();
-    const days = daysStr.split(",").map(function(s){return parseInt(s.trim(),10);}).filter(function(n){return n>0;});
-    if (days.length > 0) extra = JSON.stringify({days: days});
-  }
-  const payload = {
-    name: document.getElementById("alert-name").value.trim() || "未命名规则",
-    kind: kind,
-    threshold: parseFloat(document.getElementById("alert-threshold").value) || 0,
-    duration: parseInt(document.getElementById("alert-duration").value, 10) || 0,
-    cooldown: parseInt(document.getElementById("alert-cooldown").value, 10) || 1800,
-    target: document.getElementById("alert-target").value,
-    silent_from: document.getElementById("alert-silent-from").value.trim(),
-    silent_to: document.getElementById("alert-silent-to").value.trim(),
-    extra: extra,
-    notifier_ids: JSON.stringify(notifierIds),
-    enabled: document.getElementById("alert-enabled").checked
-  };
-  try {
-    if (id > 0) {
-      await api("/api/alerts/" + id, { method: "PATCH", body: JSON.stringify(payload) });
-    } else {
-      await api("/api/alerts", { method: "POST", body: JSON.stringify(payload) });
-    }
-    resetAlertForm();
-    await loadAlerts();
-  } catch (e) {
-    alert("保存失败: " + e.message);
-  }
-}
-
-async function deleteAlert(id) {
-  if (!confirm("删除该告警规则?")) return;
-  try {
-    await fetch("/api/alerts/" + id, { method: "DELETE" });
-    await loadAlerts();
-  } catch (e) { alert(e.message); }
-}
-
-async function testAlert(id) {
-  try {
-    await api("/api/alerts/" + id + "/test", { method: "POST" });
-    alert("测试消息已发送,请去 Telegram 查看");
-  } catch(e) { alert("失败: " + e.message); }
-}
-
-function escapeHTML(s) {
-  if (s == null) return "";
-  return String(s).replace(/[&<>"']/g, function(c){
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-  });
-}
-
-async function loadConfig() {
-  try {
-    const cfg = await api("/api/config");
-    if (cfg && cfg.panel_title) {
-      document.title = cfg.panel_title;
-      const h = document.getElementById("panel-title");
-      if (h) h.textContent = cfg.panel_title;
-    }
-    if (cfg && cfg.self_monitor_node_id) {
-      _selfMonitorNodeId = cfg.self_monitor_node_id;
-    }
-  } catch (e) { /* 静默 */ }
-}
-
-function setTheme(t) {
-  document.documentElement.dataset.theme = t;
-  localStorage.setItem("theme", t);
-  ["dark","light","blue"].forEach(function(n){
-    const el = document.getElementById("theme-" + n);
-    if (el) el.classList.toggle("active", n === t);
-  });
-}
-
-(function(){
-  const saved = localStorage.getItem("theme") || "dark";
-  setTheme(saved);
-})();
-
-function openSettings() {
-  openModal("modal-settings");
-  switchSettingsTab("general", document.querySelector(".settings-tab.active"));
-  const cfg_title = document.getElementById("settings-title");
-  const h = document.getElementById("panel-title");
-  if (cfg_title && h) cfg_title.value = h.textContent;
-  load2FAStatus();
-}
-
-function switchSettingsTab(name, el) {
-  document.querySelectorAll(".settings-tab").forEach(function(t){ t.classList.remove("active"); });
-  document.querySelectorAll(".settings-panel").forEach(function(p){ p.classList.remove("active"); });
-  if (el) el.classList.add("active");
-  const panel = document.getElementById("settings-" + name);
-  if (panel) {
-    panel.classList.add("active");
-    if (name === "audit") loadAuditLog();
-  }
-}
-
-async function saveGeneralSettings() {
-  const payload = {};
-  const t = document.getElementById("settings-title").value.trim();
-  if (t) payload.panel_title = t;
-  const c = document.getElementById("settings-currency").value.trim();
-  if (c) payload.main_currency = c;
-  payload.public_enabled = document.getElementById("settings-public").checked;
-  try {
-    await api("/api/config", { method: "PATCH", body: JSON.stringify(payload) });
-    if (payload.panel_title) {
-      document.title = payload.panel_title;
-      document.getElementById("panel-title").textContent = payload.panel_title;
-    }
-    alert("已保存");
-  } catch(e) { alert("保存失败: " + e.message); }
-}
-
-// ===== 2FA =====
-
-async function load2FAStatus() {
-  try {
-    const s = await api("/api/2fa/status");
-    const btn = document.getElementById("tfa-toggle-btn");
-    const statusText = document.getElementById("tfa-status-text");
-    const disableSection = document.getElementById("tfa-disable-section");
-    if (s.enabled) {
-      statusText.innerHTML = '<span style="color:var(--green)">● 两步验证已启用</span>';
-      btn.textContent = "关闭两步验证";
-      btn.classList.add("danger");
-    } else {
-      statusText.innerHTML = '<span style="color:var(--text-dim)">○ 两步验证未启用</span>';
-      btn.textContent = "启用两步验证";
-      btn.classList.remove("danger");
-      disableSection.style.display = "none";
-    }
-  } catch(e) {}
-}
-
-async function toggle2FA() {
-  try {
-    const s = await api("/api/2fa/status");
-    if (s.enabled) {
-      document.getElementById("tfa-disable-section").style.display = "block";
-    } else {
-      const r = await api("/api/2fa/enable", { method: "POST" });
-      document.getElementById("tfa-secret").value = r.secret || "";
-      document.getElementById("tfa-uri").value = r.uri || "";
-      document.getElementById("tfa-setup-section").style.display = "block";
-      document.getElementById("tfa-enable-btn-row").style.display = "none";
-    }
-  } catch(e) { alert(e.message); }
-}
-
-function cancel2FASetup() {
-  document.getElementById("tfa-setup-section").style.display = "none";
-  document.getElementById("tfa-enable-btn-row").style.display = "block";
-}
-
-async function verify2FA() {
-  const code = document.getElementById("tfa-code").value.trim();
-  if (code.length !== 6) { alert("请输入 6 位验证码"); return; }
-  try {
-    await api("/api/2fa/verify", { method: "POST", body: JSON.stringify({ code: code }) });
-    alert("两步验证已启用");
-    document.getElementById("tfa-setup-section").style.display = "none";
-    document.getElementById("tfa-enable-btn-row").style.display = "block";
-    load2FAStatus();
-  } catch(e) { alert("验证失败: " + e.message); }
-}
-
-async function disable2FA() {
-  const pw = document.getElementById("tfa-disable-pw").value;
-  if (!pw) { alert("请输入密码"); return; }
-  try {
-    await api("/api/2fa/disable", { method: "POST", body: JSON.stringify({ password: pw }) });
-    alert("两步验证已关闭");
-    document.getElementById("tfa-disable-section").style.display = "none";
-    document.getElementById("tfa-disable-pw").value = "";
-    load2FAStatus();
-  } catch(e) { alert("操作失败: " + e.message); }
-}
-
-// ===== 审计日志 =====
-
-async function loadAuditLog() {
-  const container = document.getElementById("audit-list-container");
-  if (!container) return;
-  try {
-    const data = await api("/api/audit-log?limit=100");
-    const items = data.items || [];
-    if (!items.length) {
-      container.innerHTML = '<div style="color:var(--text-dim);font-size:13px;">暂无记录</div>';
-      return;
-    }
-    const actionLabels = { update_node:"修改节点", delete_node:"删除节点", update_config:"修改配置",
-      enable_2fa:"开启2FA", disable_2fa:"关闭2FA", backup_import:"导入备份", uninstall_all:"全员卸载" };
-    container.innerHTML = '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">'
-      + '<thead><tr style="border-bottom:1px solid var(--border);color:var(--text-dim);">'
-      + '<th style="text-align:left;padding:6px 8px;">时间</th>'
-      + '<th style="text-align:left;padding:6px 8px;">操作</th>'
-      + '<th style="text-align:left;padding:6px 8px;">目标</th>'
-      + '<th style="text-align:left;padding:6px 8px;">IP</th></tr></thead><tbody>'
-      + items.map(function(e){
-          const t = new Date(e.ts * 1000).toLocaleString("zh-CN");
-          const action = actionLabels[e.action] || e.action;
-          return '<tr style="border-bottom:1px solid var(--border);">'
-            + '<td style="padding:5px 8px;color:var(--text-dim);">' + escapeHTML(t) + '</td>'
-            + '<td style="padding:5px 8px;">' + escapeHTML(action) + '</td>'
-            + '<td style="padding:5px 8px;">' + escapeHTML(e.target) + '</td>'
-            + '<td style="padding:5px 8px;color:var(--text-dim);">' + escapeHTML(e.ip) + '</td>'
-            + '</tr>';
-        }).join("")
-      + '</tbody></table></div>';
-  } catch(e) { container.innerHTML = '<div style="color:var(--red);">加载失败: ' + escapeHTML(e.message) + '</div>'; }
-}
-
-// ===== 备份恢复 =====
-
-async function importBackup(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const status = document.getElementById("backup-import-status");
-  status.textContent = "导入中...";
-  try {
-    const text = await file.text();
-    await api("/api/backup/import", { method: "POST", body: text });
-    status.style.color = "var(--green)";
-    status.textContent = "✓ 导入成功,页面将刷新...";
-    setTimeout(function(){ location.reload(); }, 1500);
-  } catch(e) {
-    status.style.color = "var(--red)";
-    status.textContent = "✗ 导入失败: " + e.message;
-  }
-  input.value = "";
-}
-
-// ===== 全员卸载 =====
-
-async function uninstallAll() {
-  const confirm1 = prompt('确认操作:请输入 "UNINSTALL ALL" 以继续');
-  if (confirm1 !== "UNINSTALL ALL") { alert("取消"); return; }
-  try {
-    const r = await api("/api/uninstall-all", { method: "POST" });
-    alert("已向 " + r.count + " 个节点发送卸载指令");
-  } catch(e) { alert("失败: " + e.message); }
-}
-
-async function renamePanel() {
-  if (!_loggedIn) { toggleLoginPopup(); return; }
-  const cur = document.getElementById("panel-title").textContent;
-  const next = prompt("修改面板标题(最多 60 字符):", cur);
-  if (next === null) return;
-  const t = next.trim();
-  if (t === cur) return;
-  try {
-    const r = await api("/api/config", {
-      method: "PATCH",
-      body: JSON.stringify({ panel_title: t })
+    // Get all probe targets to find assigned nodes
+    const list=await api("/api/probe-targets");
+    const target=(list||[]).find(t=>t.id===_viewingProbeTargetId);
+    if(!target){return;}
+    const nodeIds=JSON.parse(target.node_ids||"[]");
+    const grid=document.getElementById("probe-result-grid");
+    if(!nodeIds.length){grid.innerHTML='<div style="color:var(--text-dim);font-size:13px">该目标尚未分配节点</div>';return;}
+    // Fetch results for each node
+    const cards=await Promise.all(nodeIds.map(async nid=>{
+      const n=nodes.find(x=>x.id===nid);
+      const nodeName=n?n.name:"节点#"+nid;
+      try {
+        const data=await api("/api/probe-targets/"+_viewingProbeTargetId+"/results?node_id="+nid+"&range="+range);
+        const items=data.items||[];
+        const icmpItems=items.filter(r=>r.proto==="icmp");
+        const tcpItems=items.filter(r=>r.proto==="tcp");
+        let html='<div class="probe-result-card"><h4>'+escapeHTML(nodeName)+'</h4>';
+        if(icmpItems.length){
+          html+='<div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">ICMP</div>';
+          html+='<svg class="chart" height="60" viewBox="0 0 280 60" preserveAspectRatio="none" id="pr-icmp-'+nid+'"></svg>';
+        }
+        if(tcpItems.length){
+          html+='<div style="font-size:11px;color:var(--text-dim);margin:6px 0 4px">TCP</div>';
+          html+='<svg class="chart" height="60" viewBox="0 0 280 60" preserveAspectRatio="none" id="pr-tcp-'+nid+'"></svg>';
+        }
+        if(!icmpItems.length&&!tcpItems.length)html+='<div style="color:var(--text-dim);font-size:12px">暂无数据</div>';
+        html+='</div>';
+        return {html, nid, icmpItems, tcpItems};
+      } catch(e){return {html:'<div class="probe-result-card"><h4>'+escapeHTML(nodeName)+'</h4><div style="color:var(--text-dim);font-size:12px">加载失败</div></div>',nid,icmpItems:[],tcpItems:[]};}
+    }));
+    grid.innerHTML=cards.map(c=>c.html).join("");
+    // Draw charts after DOM update
+    cards.forEach(c=>{
+      if(c.icmpItems.length){
+        const svg=document.getElementById("pr-icmp-"+c.nid);
+        if(svg)drawSmallChart(svg,c.icmpItems.map(r=>r.latency_ms),"#4f8cff",60);
+      }
+      if(c.tcpItems.length){
+        const svg=document.getElementById("pr-tcp-"+c.nid);
+        if(svg)drawSmallChart(svg,c.tcpItems.map(r=>r.latency_ms),"#4ade80",60);
+      }
     });
-    if (r && r.panel_title) {
-      document.title = r.panel_title;
-      document.getElementById("panel-title").textContent = r.panel_title;
-    }
-  } catch (e) {
-    alert("保存失败: " + e.message);
-  }
+  } catch(e){document.getElementById("probe-result-grid").innerHTML='<div style="color:var(--red)">加载失败: '+escapeHTML(e.message)+'</div>';}
+}
+function drawSmallChart(svg, values, color, H){
+  if(!values||!values.length){svg.innerHTML="";return;}
+  const max=Math.max(...values,1);
+  const W=280;
+  const pts=values.map((v,i)=>{
+    const x=values.length===1?W/2:(i/(values.length-1))*(W-6)+3;
+    const y=H-3-((v/max)*(H-6));
+    return x.toFixed(1)+","+y.toFixed(1);
+  }).join(" ");
+  const fp=pts.split(" ");
+  const fillPts=fp[0]+","+H+" "+pts+" "+fp[fp.length-1].split(",")[0]+","+H;
+  svg.innerHTML='<polygon fill="'+hexToRgba(color,0.15)+'" points="'+fillPts+'"/>'
+    +'<polyline fill="none" stroke="'+color+'" stroke-width="1.5" points="'+pts+'"/>';
 }
 
-document.getElementById("login-password").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") submitLogin();
-});
-
-// 点击弹窗外部关闭
-document.addEventListener("click", function(e) {
-  const popup = document.getElementById("login-popup");
-  const btn = document.getElementById("header-login-btn");
-  if (popup.classList.contains("show") && !popup.contains(e.target) && e.target !== btn) {
-    closeLoginPopup();
-  }
+// ===== Global event handlers =====
+document.getElementById("login-password").addEventListener("keydown",e=>{if(e.key==="Enter")submitLogin();});
+document.addEventListener("click",e=>{
+  const popup=document.getElementById("login-popup");
+  const btn=document.getElementById("header-login-btn");
+  if(popup.classList.contains("show")&&!popup.contains(e.target)&&e.target!==btn)closeLoginPopup();
 });
 
 loadApp();
-setInterval(loadNodes, 3000);
+setInterval(loadNodes, 5000);
 </script>
 </body>
 </html>

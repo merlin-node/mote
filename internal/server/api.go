@@ -113,6 +113,10 @@ func (a *API) Routes() http.Handler {
 	mux.HandleFunc("/api/2fa/verify", a.handle2FAVerify)
 	mux.HandleFunc("/api/2fa/disable", a.handle2FADisable)
 
+	// 探针目标管理
+	mux.HandleFunc("/api/probe-targets", a.handleProbeTargets)
+	mux.HandleFunc("/api/probe-targets/", a.handleProbeTargetOps)
+
 	// 公开下载:安装脚本 + bk 二进制(无需鉴权,小鸡装机要能匿名访问)
 	mux.HandleFunc("/install/", a.handleInstallAsset)
 	mux.HandleFunc("/install-bk.sh", a.handleInstallAsset) // 兼容旧路径
@@ -1267,4 +1271,131 @@ func (a *API) opAlertTest(w http.ResponseWriter, r *http.Request, id int64) {
 		Timestamp: time.Now().Unix(),
 	})
 	writeJSONResp(w, map[string]any{"ok": true})
+}
+
+// === 探针目标管理 ===
+
+func (a *API) handleProbeTargets(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		list, err := a.store.ListProbeTargets()
+		if err != nil {
+			httpError(w, err)
+			return
+		}
+		writeJSONResp(w, list)
+	case http.MethodPost:
+		var t ProbeTarget
+		if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
+			http.Error(w, "bad json", http.StatusBadRequest)
+			return
+		}
+		if t.IP == "" {
+			http.Error(w, "ip required", http.StatusBadRequest)
+			return
+		}
+		if t.Proto == "" {
+			t.Proto = "icmp"
+		}
+		t.Enabled = true
+		id, err := a.store.CreateProbeTarget(&t)
+		if err != nil {
+			httpError(w, err)
+			return
+		}
+		out, _ := a.store.GetProbeTarget(id)
+		a.pushProbeConfigToNodes(&t)
+		writeJSONResp(w, out)
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// /api/probe-targets/{id}           PATCH/DELETE
+// /api/probe-targets/{id}/results   GET 历史结果
+func (a *API) handleProbeTargetOps(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/api/probe-targets/")
+	parts := strings.Split(path, "/")
+	if len(parts) == 0 || parts[0] == "" {
+		http.NotFound(w, r)
+		return
+	}
+	id, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	sub := ""
+	if len(parts) >= 2 {
+		sub = parts[1]
+	}
+
+	if sub == "results" {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		nodeID, _ := strconv.ParseInt(r.URL.Query().Get("node_id"), 10, 64)
+		rangeStr := r.URL.Query().Get("range")
+		since := probeRangeSince(rangeStr)
+		rows, err := a.store.QueryProbeResults(id, nodeID, since, 500)
+		if err != nil {
+			httpError(w, err)
+			return
+		}
+		writeJSONResp(w, map[string]any{"target_id": id, "node_id": nodeID, "items": rows})
+		return
+	}
+
+	switch r.Method {
+	case http.MethodPatch:
+		t, err := a.store.GetProbeTarget(id)
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		if err := json.NewDecoder(r.Body).Decode(t); err != nil {
+			http.Error(w, "bad json", http.StatusBadRequest)
+			return
+		}
+		t.ID = id
+		if err := a.store.UpdateProbeTarget(t); err != nil {
+			httpError(w, err)
+			return
+		}
+		a.pushProbeConfigToNodes(t)
+		writeJSONResp(w, t)
+	case http.MethodDelete:
+		if err := a.store.DeleteProbeTarget(id); err != nil {
+			httpError(w, err)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func probeRangeSince(rangeStr string) int64 {
+	now := time.Now().Unix()
+	switch rangeStr {
+	case "6h":
+		return now - 6*3600
+	case "24h":
+		return now - 24*3600
+	case "7d":
+		return now - 7*86400
+	case "30d":
+		return now - 30*86400
+	default:
+		return now - 3600
+	}
+}
+
+func (a *API) pushProbeConfigToNodes(t *ProbeTarget) {
+	var nodeIDs []int64
+	json.Unmarshal([]byte(t.NodeIDs), &nodeIDs) //nolint:errcheck
+	for _, nid := range nodeIDs {
+		a.hub.PushProbeConfig(nid)
+	}
 }

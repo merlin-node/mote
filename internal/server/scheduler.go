@@ -159,6 +159,9 @@ func (s *Scheduler) tick() {
 	// 5) 清理过期聚合数据和审计日志
 	s.store.CleanupAggregated(now)
 	s.store.CleanupAudit(now - 90*24*3600)
+
+	// 6) 清理过期探针结果(保留 7 天)
+	s.store.CleanupProbeResults(now - 7*24*3600)
 }
 
 // nextResetTime 给定当前周期起点,返回下一个重置时刻(指定日的 00:00)

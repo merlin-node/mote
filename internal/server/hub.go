@@ -279,6 +279,9 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request) {
 	// 服务端不主动发底层 Ping(由 agent 主动发),只在收到 Ping/Pong/任何消息时刷新窗口。
 	ac.setupKeepalive()
 
+	// 下发探针配置(异步,避免阻塞握手)
+	go h.sendProbeConfig(ac)
+
 	// 启动 writer 和 reader
 	go ac.writer()
 	ac.reader()
@@ -408,6 +411,8 @@ func (c *AgentConn) reader() {
 			log.Printf("agent #%d sent bye (reason=%s)", c.NodeID, reason)
 			c.hub.recordBye(c.NodeID, reason)
 			return
+		case shared.MsgTypeProbeResult:
+			c.handleProbeResult(env.Payload)
 		}
 	}
 }
@@ -493,6 +498,66 @@ func (c *AgentConn) handleMetricBatch(payload json.RawMessage) {
 			continue
 		}
 		c.applyMetric(&batch.Items[i], raw)
+	}
+}
+
+// sendProbeConfig 把分配给该节点的探针目标下发给被控
+func (h *Hub) sendProbeConfig(ac *AgentConn) {
+	targets, err := h.store.ListProbeTargets()
+	if err != nil {
+		return
+	}
+	var assigned []shared.ProbeTargetItem
+	for _, t := range targets {
+		if !t.Enabled {
+			continue
+		}
+		var nodeIDs []int64
+		json.Unmarshal([]byte(t.NodeIDs), &nodeIDs) //nolint:errcheck
+		for _, nid := range nodeIDs {
+			if nid == ac.NodeID {
+				assigned = append(assigned, shared.ProbeTargetItem{
+					ID: t.ID, Name: t.Name, IP: t.IP, Port: t.Port, Proto: t.Proto,
+				})
+				break
+			}
+		}
+	}
+	if len(assigned) == 0 {
+		return
+	}
+	ac.sendRaw(shared.MsgTypeProbeConfig, shared.ProbeConfigPayload{Targets: assigned})
+}
+
+// PushProbeConfig 当探针目标变更时, 向已在线的被分配节点推送最新配置
+func (h *Hub) PushProbeConfig(nodeID int64) {
+	h.mu.RLock()
+	ac, ok := h.conns[nodeID]
+	h.mu.RUnlock()
+	if !ok {
+		return
+	}
+	go h.sendProbeConfig(ac)
+}
+
+func (c *AgentConn) handleProbeResult(payload json.RawMessage) {
+	var res shared.ProbeResultPayload
+	if err := json.Unmarshal(payload, &res); err != nil {
+		log.Printf("warn: bad probe_result from node #%d: %v", c.NodeID, err)
+		return
+	}
+	if res.Timestamp == 0 {
+		res.Timestamp = time.Now().Unix()
+	}
+	for _, item := range res.Items {
+		_ = c.hub.store.SaveProbeResult(&ProbeResultRow{
+			TargetID:  item.TargetID,
+			NodeID:    c.NodeID,
+			TS:        res.Timestamp,
+			Proto:     item.Proto,
+			LatencyMS: item.LatencyMS,
+			Success:   item.Success,
+		})
 	}
 }
 

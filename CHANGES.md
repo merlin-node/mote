@@ -2,6 +2,107 @@
 
 ---
 
+# v2.3 分布式拨测 + 节点详情弹窗 + UI 全面升级（2026-05）
+
+## 分布式网络拨测（probe）
+
+### 协议层 `internal/shared/protocol.go`
+
+新增两种消息类型：
+
+- `probe_config`（zk → bk）：主控向被控下发探测目标列表
+- `probe_result`（bk → zk）：被控将本轮探测结果上报给主控
+
+新增结构体：
+
+```go
+ProbeTargetItem  { ID, Name, IP, Port, Proto("icmp"/"tcp"/"both") }
+ProbeConfigPayload  { Targets []ProbeTargetItem }
+ProbeResultItem  { TargetID, Proto, LatencyMS, Success }
+ProbeResultPayload  { Timestamp, Items []ProbeResultItem }
+```
+
+### 数据库 `internal/server/store.go`
+
+新增两张表：
+
+- `probe_targets`：探测目标（名称、IP、端口、协议、指定节点列表 JSON、启用状态）
+- `probe_results`：探测结果（target_id, node_id, ts, proto, latency_ms, success）；带索引 `idx_probe_results(target_id, node_id, ts)`
+
+新增方法：`ListProbeTargets` / `GetProbeTarget` / `CreateProbeTarget` / `UpdateProbeTarget` / `DeleteProbeTarget` / `SaveProbeResult` / `QueryProbeResults` / `CleanupProbeResults`（保留 7 天）。
+
+### 主控 Hub `internal/server/hub.go`
+
+- 被控注册成功后异步调用 `sendProbeConfig(ac)`，将该节点被指定参与的探测目标一次性推送给 bk
+- 新增 `PushProbeConfig(nodeID)` 方法：探测目标 CRUD 操作后实时热推给相关被控
+- 新增 `handleProbeResult` 方法（挂在 AgentConn 上）：解析上报结果并写库
+
+### REST API `internal/server/api.go`
+
+新增路由：
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/probe-targets` | 列出所有探测目标 |
+| POST | `/api/probe-targets` | 创建目标并推送配置给相关节点 |
+| PATCH | `/api/probe-targets/{id}` | 更新目标并重推配置 |
+| DELETE | `/api/probe-targets/{id}` | 删除目标 |
+| GET | `/api/probe-targets/{id}/results` | 查询结果，支持 `node_id` 和 `range=1h/6h/24h/7d/30d` 参数 |
+
+### 被控探测逻辑 `internal/agent/`
+
+新文件 `probe_net.go`：
+
+- `probeTCP(ip, port, timeout)` — TCP dial 测延迟
+- `probeICMP(ip, timeout)` — 原始 ICMP socket（`ip4:icmp`），手写 Echo Request 报文 + 校验和，读回 Echo Reply 验证 ID（需 root / `CAP_NET_RAW`，bk 以 root 运行）
+
+`runner.go` 新增探测 goroutine：
+
+- 收到 `probe_config` 后热更新目标列表（`probeState` + `sync.Mutex`）
+- 60 秒 ticker 触发本轮探测，新配置到达时立即触发一次
+- 按 proto 字段分别执行 ICMP / TCP / 两者，结果打包成 `probe_result` 上报
+
+### 调度器清理 `internal/server/scheduler.go`
+
+`tick()` 新增步骤 6：调用 `store.CleanupProbeResults(now - 7*24*3600)`，保持探测结果表不无限膨胀。
+
+---
+
+## 节点详情弹窗
+
+点击任意节点卡片，弹出两栏布局的详情窗口（`modal-detail`）：
+
+- **左栏（固定 280px）**：实时 CPU / 内存 / Swap 进度条；系统信息行（运行时长、负载、进程数、TCP/UDP 连接数、入站/出站速率）；磁盘列表；流量进度条
+- **右栏（自适应）**：四张面积图（CPU % / 内存 % / 网络入站 / 网络出站），标签切换 1h / 24h / 7d / 30d；拨测区展示该节点参与的探测目标的延迟历史曲线
+
+面积图用 SVG `<polygon>`（填充区域）+ `<polyline>`（折线）实现，无第三方图表库。
+
+"编辑"按钮仅对已登录用户可见，点击后直接打开节点编辑 Modal。
+
+---
+
+## UI 全面升级 `internal/server/web/index.html`
+
+全文件重写（原 ~300 行 → 1127 行）：
+
+### 视觉
+- CSS 自定义属性驱动三套主题（深色 / 浅色 / 蓝色）
+- 节点卡片 hover 上浮动效果（`transform: translateY(-1px)` + box-shadow glow）
+- 在线状态点呼吸动画（`@keyframes pulse`）
+- 统一圆角、间距、字体层级
+
+### 响应式
+- 双断点：`@media (max-width: 768px)` 主断点；`@media (max-width: 480px)` 极小屏
+- 768px 以下：节点网格单列，header 隐藏统计数字，探针网格 / 历史图表单列，modal 底栏弹出
+- 480px 以下：Toolbar 按钮仅显示图标
+
+### 探针管理弹窗（`modal-probe`）
+- 探测目标列表：ICMP / TCP 徽章、已分配节点标签
+- 内嵌表单：名称、IP、端口、协议下拉（icmp / tcp / both）、节点复选框
+- 查看结果视图：按节点分卡片展示延迟历史小折线图，时间范围 Tab 切换
+
+---
+
 # v2.2 Docker 支持 + 端口统一（2026-05）
 
 ## 默认监听端口改为 1888

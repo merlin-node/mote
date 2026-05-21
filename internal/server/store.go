@@ -186,6 +186,28 @@ func (s *Store) migrate() error {
 			active INTEGER DEFAULT 0,        -- 1=正在告警 0=已恢复
 			PRIMARY KEY (rule_id, node_id, scope)
 		)`,
+		// 网络探针目标(管理员配置,推送给被控执行)
+		`CREATE TABLE IF NOT EXISTS probe_targets (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL DEFAULT '',
+			ip TEXT NOT NULL,
+			port INTEGER DEFAULT 0,
+			proto TEXT NOT NULL DEFAULT 'icmp',
+			node_ids TEXT NOT NULL DEFAULT '[]',
+			enabled INTEGER NOT NULL DEFAULT 1,
+			created_at INTEGER NOT NULL
+		)`,
+		// 探针结果(被控上报,node_id=0 表示主控自测)
+		`CREATE TABLE IF NOT EXISTS probe_results (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			target_id INTEGER NOT NULL,
+			node_id INTEGER NOT NULL DEFAULT 0,
+			ts INTEGER NOT NULL,
+			proto TEXT NOT NULL DEFAULT 'icmp',
+			latency_ms REAL DEFAULT 0,
+			success INTEGER DEFAULT 1
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_probe_results ON probe_results(target_id, node_id, ts)`,
 	}
 	for _, q := range stmts {
 		if _, err := s.db.Exec(q); err != nil {
@@ -1113,4 +1135,138 @@ func (s *Store) ImportBackup(data *BackupData) error {
 	}
 
 	return tx.Commit()
+}
+
+// === 网络探针目标 ===
+
+type ProbeTarget struct {
+	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	IP        string `json:"ip"`
+	Port      int    `json:"port"`
+	Proto     string `json:"proto"`    // icmp / tcp / both
+	NodeIDs   string `json:"node_ids"` // JSON array of int64
+	Enabled   bool   `json:"enabled"`
+	CreatedAt int64  `json:"created_at"`
+}
+
+type ProbeResultRow struct {
+	TargetID  int64   `json:"target_id"`
+	NodeID    int64   `json:"node_id"`
+	TS        int64   `json:"ts"`
+	Proto     string  `json:"proto"`
+	LatencyMS float64 `json:"latency_ms"`
+	Success   bool    `json:"success"`
+}
+
+func (s *Store) ListProbeTargets() ([]*ProbeTarget, error) {
+	rows, err := s.db.Query(`SELECT id, name, ip, port, proto, node_ids, enabled, created_at FROM probe_targets ORDER BY id`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*ProbeTarget
+	for rows.Next() {
+		t := &ProbeTarget{}
+		var enabled int
+		if err := rows.Scan(&t.ID, &t.Name, &t.IP, &t.Port, &t.Proto, &t.NodeIDs, &enabled, &t.CreatedAt); err != nil {
+			return nil, err
+		}
+		t.Enabled = enabled == 1
+		out = append(out, t)
+	}
+	if out == nil {
+		out = []*ProbeTarget{}
+	}
+	return out, nil
+}
+
+func (s *Store) GetProbeTarget(id int64) (*ProbeTarget, error) {
+	t := &ProbeTarget{}
+	var enabled int
+	err := s.db.QueryRow(`SELECT id, name, ip, port, proto, node_ids, enabled, created_at FROM probe_targets WHERE id=?`, id).
+		Scan(&t.ID, &t.Name, &t.IP, &t.Port, &t.Proto, &t.NodeIDs, &enabled, &t.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	t.Enabled = enabled == 1
+	return t, nil
+}
+
+func (s *Store) CreateProbeTarget(t *ProbeTarget) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if t.NodeIDs == "" {
+		t.NodeIDs = "[]"
+	}
+	if t.Proto == "" {
+		t.Proto = "icmp"
+	}
+	now := time.Now().Unix()
+	res, err := s.db.Exec(`INSERT INTO probe_targets(name, ip, port, proto, node_ids, enabled, created_at) VALUES(?,?,?,?,?,?,?)`,
+		t.Name, t.IP, t.Port, t.Proto, t.NodeIDs, boolToInt(t.Enabled), now)
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
+}
+
+func (s *Store) UpdateProbeTarget(t *ProbeTarget) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if t.NodeIDs == "" {
+		t.NodeIDs = "[]"
+	}
+	_, err := s.db.Exec(`UPDATE probe_targets SET name=?, ip=?, port=?, proto=?, node_ids=?, enabled=? WHERE id=?`,
+		t.Name, t.IP, t.Port, t.Proto, t.NodeIDs, boolToInt(t.Enabled), t.ID)
+	return err
+}
+
+func (s *Store) DeleteProbeTarget(id int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec(`DELETE FROM probe_targets WHERE id=?`, id)
+	if err != nil {
+		return err
+	}
+	_, err = s.db.Exec(`DELETE FROM probe_results WHERE target_id=?`, id)
+	return err
+}
+
+func (s *Store) SaveProbeResult(r *ProbeResultRow) error {
+	_, err := s.db.Exec(
+		`INSERT INTO probe_results(target_id, node_id, ts, proto, latency_ms, success) VALUES(?,?,?,?,?,?)`,
+		r.TargetID, r.NodeID, r.TS, r.Proto, r.LatencyMS, boolToInt(r.Success))
+	return err
+}
+
+// QueryProbeResults 查询指定目标+节点的探针历史,返回按时间升序的列表
+func (s *Store) QueryProbeResults(targetID, nodeID int64, since int64, limit int) ([]*ProbeResultRow, error) {
+	rows, err := s.db.Query(
+		`SELECT target_id, node_id, ts, proto, latency_ms, success FROM probe_results
+		WHERE target_id=? AND node_id=? AND ts>=? ORDER BY ts ASC LIMIT ?`,
+		targetID, nodeID, since, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*ProbeResultRow
+	for rows.Next() {
+		r := &ProbeResultRow{}
+		var suc int
+		if err := rows.Scan(&r.TargetID, &r.NodeID, &r.TS, &r.Proto, &r.LatencyMS, &suc); err != nil {
+			return nil, err
+		}
+		r.Success = suc == 1
+		out = append(out, r)
+	}
+	if out == nil {
+		out = []*ProbeResultRow{}
+	}
+	return out, nil
+}
+
+// CleanupProbeResults 清理 cutoff 之前的旧探针结果
+func (s *Store) CleanupProbeResults(cutoff int64) {
+	s.db.Exec(`DELETE FROM probe_results WHERE ts < ?`, cutoff)
 }

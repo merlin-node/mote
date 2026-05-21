@@ -18,6 +18,8 @@ const (
 	MsgTypeMigration   = "migration"    // 主控 → 被控:下发迁移种子(MVP 暂不实现)
 	MsgTypeBye         = "bye"          // 被控 → 主控:主动下线通知(graceful)
 	MsgTypeError       = "error"        // 通用错误响应
+	MsgTypeProbeConfig = "probe_config" // 主控 → 被控:下发探针目标列表
+	MsgTypeProbeResult = "probe_result" // 被控 → 主控:探针结果上报
 )
 
 // Envelope 是所有 WS 消息的统一外层。
@@ -142,4 +144,32 @@ const (
 type ErrorPayload struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+}
+
+// ProbeTargetItem 主控下发给被控的单条探针目标
+type ProbeTargetItem struct {
+	ID    int64  `json:"id"`
+	Name  string `json:"name"`
+	IP    string `json:"ip"`
+	Port  int    `json:"port,omitempty"` // TCP 端口,0 表示不做 TCP 探针
+	Proto string `json:"proto"`           // "icmp" / "tcp" / "both"
+}
+
+// ProbeConfigPayload 主控 → 被控:推送探针目标列表
+type ProbeConfigPayload struct {
+	Targets []ProbeTargetItem `json:"targets"`
+}
+
+// ProbeResultItem 单条探针测量结果
+type ProbeResultItem struct {
+	TargetID  int64   `json:"target_id"`
+	Proto     string  `json:"proto"` // "icmp" or "tcp"
+	LatencyMS float64 `json:"latency_ms"`
+	Success   bool    `json:"success"`
+}
+
+// ProbeResultPayload 被控 → 主控:一批探针结果
+type ProbeResultPayload struct {
+	Timestamp int64             `json:"t"`
+	Items     []ProbeResultItem `json:"items"`
 }

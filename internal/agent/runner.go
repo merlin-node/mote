@@ -126,6 +126,26 @@ func backoff(n int) time.Duration {
 	return base + time.Duration(rand.Int63n(maxJitter))
 }
 
+// probeState 保存当前的探针目标列表（跨 goroutine 共享，需加锁）
+type probeState struct {
+	mu      sync.Mutex
+	targets []shared.ProbeTargetItem
+}
+
+func (p *probeState) update(targets []shared.ProbeTargetItem) {
+	p.mu.Lock()
+	p.targets = targets
+	p.mu.Unlock()
+}
+
+func (p *probeState) snapshot() []shared.ProbeTargetItem {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	out := make([]shared.ProbeTargetItem, len(p.targets))
+	copy(out, p.targets)
+	return out
+}
+
 // runOnce 建立一次 WS 连接并跑完它的生命周期。
 // 返回 nil 表示收到 uninstall/正常退出,不应再重连;
 // 返回非 nil 表示需要重连。
@@ -234,6 +254,8 @@ func runOnce(rootCtx context.Context, cfg *Config, collector *Collector, probe *
 	// reconfig 通过 channel 通知 ticker 协程
 	metricReconfig := make(chan int, 4)
 	heartbeatReconfig := make(chan int, 4)
+	probeCfgCh := make(chan []shared.ProbeTargetItem, 4)
+	ps := &probeState{}
 
 	// === 启动前:补传上次连接没发出去的 metric ===
 	if pending := buf.drain(); len(pending) > 0 {
@@ -336,6 +358,33 @@ func runOnce(rootCtx context.Context, cfg *Config, collector *Collector, probe *
 		}
 	}()
 
+	// === 探针协程:每 60s 对分配的目标发 ICMP/TCP 探测并上报 ===
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ticker := time.NewTicker(60 * time.Second)
+		defer ticker.Stop()
+		// 收到 probe_config 后延迟 2s 立即执行一次
+		triggerCh := make(chan struct{}, 1)
+		for {
+			select {
+			case <-connCtx.Done():
+				return
+			case <-probeCfgCh:
+				// 新配置到达,2s 后触发一次立即探测
+				select {
+				case triggerCh <- struct{}{}:
+				default:
+				}
+			case <-triggerCh:
+				runProbes(connCtx, ps, writeMu, conn)
+			case <-ticker.C:
+				runProbes(connCtx, ps, writeMu, conn)
+			}
+		}
+	}()
+	_ = ps // 已在探针 goroutine 中使用
+
 	// === 读循环 ===
 	var readErr error
 	for {
@@ -360,6 +409,15 @@ func runOnce(rootCtx context.Context, cfg *Config, collector *Collector, probe *
 			_ = writeEnvelopeSafe(writeMu, conn, shared.MsgTypePong, nil, 5*time.Second)
 		case shared.MsgTypeReconfig:
 			handleReconfig(cfg, e.Payload, metricReconfig, heartbeatReconfig)
+		case shared.MsgTypeProbeConfig:
+			var pcfg shared.ProbeConfigPayload
+			if err := json.Unmarshal(e.Payload, &pcfg); err == nil {
+				ps.update(pcfg.Targets)
+				select {
+				case probeCfgCh <- pcfg.Targets:
+				default:
+				}
+			}
 		case shared.MsgTypeUninstall:
 			log.Println("received uninstall command, executing...")
 			_ = writeEnvelopeSafe(writeMu, conn, shared.MsgTypeBye, shared.ByePayload{Reason: shared.ByeReasonUninstall}, 3*time.Second)
@@ -404,6 +462,47 @@ func handleReconfig(cfg *Config, payload json.RawMessage, metricCh, hbCh chan<- 
 		default:
 			log.Printf("reconfig: heartbeat channel full, dropped")
 		}
+	}
+}
+
+// runProbes 对当前探针目标列表执行一次 ICMP/TCP 测量并上报结果
+func runProbes(ctx context.Context, ps *probeState, writeMu *sync.Mutex, conn *websocket.Conn) {
+	targets := ps.snapshot()
+	if len(targets) == 0 {
+		return
+	}
+	timeout := 3 * time.Second
+	ts := time.Now().Unix()
+	var results []shared.ProbeResultItem
+	for _, t := range targets {
+		switch t.Proto {
+		case "icmp":
+			lat, ok := probeICMP(t.IP, timeout)
+			results = append(results, shared.ProbeResultItem{TargetID: t.ID, Proto: "icmp", LatencyMS: lat, Success: ok})
+		case "tcp":
+			port := t.Port
+			if port <= 0 {
+				port = 80
+			}
+			lat, ok := probeTCP(t.IP, port, timeout)
+			results = append(results, shared.ProbeResultItem{TargetID: t.ID, Proto: "tcp", LatencyMS: lat, Success: ok})
+		case "both":
+			lat, ok := probeICMP(t.IP, timeout)
+			results = append(results, shared.ProbeResultItem{TargetID: t.ID, Proto: "icmp", LatencyMS: lat, Success: ok})
+			port := t.Port
+			if port <= 0 {
+				port = 80
+			}
+			lat2, ok2 := probeTCP(t.IP, port, timeout)
+			results = append(results, shared.ProbeResultItem{TargetID: t.ID, Proto: "tcp", LatencyMS: lat2, Success: ok2})
+		}
+	}
+	if len(results) == 0 {
+		return
+	}
+	payload := shared.ProbeResultPayload{Timestamp: ts, Items: results}
+	if err := writeEnvelopeSafe(writeMu, conn, shared.MsgTypeProbeResult, payload, 10*time.Second); err != nil {
+		log.Printf("probe_result send error: %v", err)
 	}
 }
 
