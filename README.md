@@ -101,6 +101,9 @@ docker compose up -d
 
 # 4. 查看初始密码
 docker logs mote-zk 2>&1 | grep -E "admin (user|pass)"
+
+# 5. 设置 zk 快捷命令（以后直接敲 zk 就能用，和二进制版一样）
+echo "alias zk='docker exec -it mote-zk zk'" >> ~/.bashrc && source ~/.bashrc
 ```
 
 compose 默认把配置挂载到 `./data/config`，数据库和被控二进制挂载到 `./data/db`。
