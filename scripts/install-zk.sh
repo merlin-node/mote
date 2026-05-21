@@ -104,7 +104,7 @@ for i in 1 2 3 4 5; do
 done
 
 if [ -f "$CONFIG_DIR/config.json" ]; then
-  LISTEN=$(grep -oP '"listen":\s*"\K[^"]+' "$CONFIG_DIR/config.json" || echo ":25774")
+  LISTEN=$(grep -oP '"listen":\s*"\K[^"]+' "$CONFIG_DIR/config.json" || echo ":1888")
   USER=$(grep -oP '"admin_username":\s*"\K[^"]+' "$CONFIG_DIR/config.json")
   PASS=$(grep -oP '"admin_password":\s*"\K[^"]+' "$CONFIG_DIR/config.json")
   IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "<your-ip>")

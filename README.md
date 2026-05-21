@@ -66,15 +66,15 @@ make run-zk
 # 输出：
 # admin user: admin
 # admin pass: aB3kP9q2X7yZ
-# zk dev listening on :25774
+# zk dev listening on :1888
 ```
 
-浏览器打开 `http://127.0.0.1:25774`，点右上角"登录"，输入上面的用户名密码。
+浏览器打开 `http://127.0.0.1:1888`，点右上角"登录"，输入上面的用户名密码。
 点"+ 添加节点"，创建后得到一个 Token。
 
 ```bash
 # 终端 2：启动被控（替换 TOKEN）
-./dist/bk run -s ws://127.0.0.1:25774 -t TOKEN_HERE
+./dist/bk run -s ws://127.0.0.1:1888 -t TOKEN_HERE
 ```
 
 刷新面板，节点应该上线。
@@ -113,7 +113,7 @@ services:
     container_name: mote-zk
     restart: unless-stopped
     ports:
-      - "25774:25774"
+      - "1888:1888"
     volumes:
       - ./data/config:/etc/zk
       - ./data/db:/var/lib/zk
@@ -127,7 +127,7 @@ services:
 docker run -d \
   --name mote-zk \
   --restart unless-stopped \
-  -p 25774:25774 \
+  -p 1888:1888 \
   -v /etc/zk:/etc/zk \
   -v /var/lib/zk:/var/lib/zk \
   -e TZ=Asia/Shanghai \
@@ -142,7 +142,7 @@ docker run -d \
 sudo bash scripts/install-zk.sh
 
 # 安装完成后输出：
-#   访问地址 : http://1.2.3.4:25774
+#   访问地址 : http://1.2.3.4:1888
 #   用户名   : admin
 #   密码     : aB3kP9q2X7yZ
 ```
@@ -164,7 +164,7 @@ server {
   server_name panel.example.com;
 
   location / {
-    proxy_pass http://127.0.0.1:25774;
+    proxy_pass http://127.0.0.1:1888;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
@@ -217,7 +217,7 @@ bash <(curl -fsSL https://panel.example.com/install-bk.sh) \
 
 ```json
 {
-  "listen": ":25774",
+  "listen": ":1888",
   "data_dir": "/var/lib/zk",
   "admin_username": "admin",
   "admin_password": "改这个",

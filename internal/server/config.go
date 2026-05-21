@@ -15,7 +15,7 @@ const (
 )
 
 type Config struct {
-	Listen           string `json:"listen"`             // :25774
+	Listen           string `json:"listen"`             // :1888
 	DataDir          string `json:"data_dir"`           // /var/lib/zk
 	AdminUsername    string `json:"admin_username"`     // admin
 	AdminPassword    string `json:"admin_password"`     // 初始密码,登录后可改
@@ -58,7 +58,7 @@ func LoadOrCreateConfig(path string) (*Config, error) {
 
 func (c *Config) applyDefaults() {
 	if c.Listen == "" {
-		c.Listen = ":25774"
+		c.Listen = ":1888"
 	}
 	if c.DataDir == "" {
 		c.DataDir = DefaultDataDir
