@@ -439,6 +439,13 @@ button.sm{padding:4px 10px;font-size:12px}
       <div class="field"><label>主货币</label><input id="settings-currency" placeholder="USD" style="width:100px"/></div>
       <div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="settings-public"/> 开放公开页（未登录也可查看）</label></div>
       <div class="modal-actions"><button class="primary" onclick="saveGeneralSettings()">保存</button></div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:16px 0"/>
+      <h3 style="margin:0 0 12px;font-size:14px">改用户名</h3>
+      <div class="field-row">
+        <div class="field"><label>新用户名</label><input id="cun-new" placeholder="最多64字符" autocomplete="username"/></div>
+        <div class="field"><label>当前密码（确认身份）</label><input id="cun-pw" type="password" autocomplete="current-password"/></div>
+      </div>
+      <div class="modal-actions"><button class="primary" onclick="submitChangeUsername()">修改用户名</button></div>
     </div>
     <div class="settings-panel" id="settings-2fa">
       <div id="tfa-status-text" style="margin-bottom:12px"></div>
@@ -467,6 +474,16 @@ button.sm{padding:4px 10px;font-size:12px}
       <div class="modal-actions" style="justify-content:flex-start;margin-top:8px"><button onclick="loadAuditLog()">↻ 刷新</button></div>
     </div>
     <div class="settings-panel" id="settings-danger">
+      <div style="border:1px solid var(--red);border-radius:8px;padding:16px;margin-bottom:16px">
+        <h3 style="color:var(--red);margin:0 0 8px">迁移主控</h3>
+        <p style="color:var(--text-dim);font-size:12px;margin:0 0 12px">向所有在线节点广播新主控地址，被控验签后自动切换并重连。操作前请确保新主控已就绪。</p>
+        <div class="field-row">
+          <div class="field"><label>新主控 WebSocket 地址</label><input id="migrate-server" placeholder="wss://新主控:1888"/></div>
+          <div class="field"><label>新 Token（空=沿用 AD key）</label><input id="migrate-token" placeholder="可留空"/></div>
+        </div>
+        <button class="danger" onclick="submitMigrate()">广播迁移种子</button>
+        <span id="migrate-status" style="margin-left:10px;font-size:13px"></span>
+      </div>
       <div style="border:1px solid var(--red);border-radius:8px;padding:16px">
         <h3 style="color:var(--red);margin:0 0 8px">全员卸载</h3>
         <p style="color:var(--text-dim);font-size:12px;margin:0 0 12px">向所有在线节点发送卸载指令。此操作不可逆。</p>
@@ -993,6 +1010,20 @@ function setTheme(t){document.documentElement.dataset.theme=t;localStorage.setIt
 (function(){setTheme(localStorage.getItem("theme")||"dark");})();
 function openSettings(){openModal("modal-settings");switchSettingsTab("general",document.querySelector(".settings-tab.active"));const cfg_title=document.getElementById("settings-title");const h=document.getElementById("panel-title");if(cfg_title&&h)cfg_title.value=h.textContent;load2FAStatus();try{api("/api/config").then(cfg=>{if(cfg&&cfg.public_enabled!==undefined){const el=document.getElementById("settings-public");if(el)el.checked=cfg.public_enabled;}});}catch(e){}}
 function switchSettingsTab(name,el){document.querySelectorAll(".settings-tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll(".settings-panel").forEach(p=>p.classList.remove("active"));if(el)el.classList.add("active");const panel=document.getElementById("settings-"+name);if(panel){panel.classList.add("active");if(name==="audit")loadAuditLog();}}
+async function submitChangeUsername(){
+  const newName=document.getElementById("cun-new").value.trim();
+  const pw=document.getElementById("cun-pw").value;
+  if(!newName){alert("新用户名不能为空");return;}
+  if(!pw){alert("请输入当前密码");return;}
+  try{
+    await api("/api/change-username",{method:"POST",body:JSON.stringify({password:pw,new:newName})});
+    document.getElementById("cun-new").value="";
+    document.getElementById("cun-pw").value="";
+    alert("用户名已修改，请重新登录");
+    updateAuthUI(false);
+    closeModal("modal-settings");
+  }catch(e){alert("修改失败: "+e.message);}
+}
 async function saveGeneralSettings(){const payload={};const t=document.getElementById("settings-title").value.trim();if(t)payload.panel_title=t;const c=document.getElementById("settings-currency").value.trim();if(c)payload.main_currency=c;payload.public_enabled=document.getElementById("settings-public").checked;try{await api("/api/config",{method:"PATCH",body:JSON.stringify(payload)});if(payload.panel_title){document.title=payload.panel_title;document.getElementById("panel-title").textContent=payload.panel_title;}alert("已保存");}catch(e){alert("保存失败: "+e.message);}}
 async function load2FAStatus(){try{const s=await api("/api/2fa/status");const btn=document.getElementById("tfa-toggle-btn");const statusText=document.getElementById("tfa-status-text");const disableSection=document.getElementById("tfa-disable-section");if(s.enabled){statusText.innerHTML='<span style="color:var(--green)">● 两步验证已启用</span>';btn.textContent="关闭两步验证";btn.classList.add("danger");}else{statusText.innerHTML='<span style="color:var(--text-dim)">○ 两步验证未启用</span>';btn.textContent="启用两步验证";btn.classList.remove("danger");disableSection.style.display="none";}}catch(e){}}
 async function toggle2FA(){try{const s=await api("/api/2fa/status");if(s.enabled){document.getElementById("tfa-disable-section").style.display="block";}else{const r=await api("/api/2fa/enable",{method:"POST"});document.getElementById("tfa-secret").value=r.secret||"";document.getElementById("tfa-uri").value=r.uri||"";document.getElementById("tfa-setup-section").style.display="block";document.getElementById("tfa-enable-btn-row").style.display="none";}}catch(e){alert(e.message);}}
@@ -1002,6 +1033,19 @@ async function disable2FA(){const pw=document.getElementById("tfa-disable-pw").v
 async function loadAuditLog(){const container=document.getElementById("audit-list-container");if(!container)return;try{const data=await api("/api/audit-log?limit=100");const items=data.items||[];if(!items.length){container.innerHTML='<div style="color:var(--text-dim);font-size:13px">暂无记录</div>';return;}const al={update_node:"修改节点",delete_node:"删除节点",update_config:"修改配置",enable_2fa:"开启2FA",disable_2fa:"关闭2FA",backup_import:"导入备份",uninstall_all:"全员卸载"};container.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1px solid var(--border);color:var(--text-dim)"><th style="text-align:left;padding:6px 8px">时间</th><th style="text-align:left;padding:6px 8px">操作</th><th style="text-align:left;padding:6px 8px">目标</th><th style="text-align:left;padding:6px 8px">IP</th></tr></thead><tbody>'+items.map(e=>'<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text-dim)">'+escapeHTML(new Date(e.ts*1000).toLocaleString("zh-CN"))+'</td><td style="padding:5px 8px">'+escapeHTML(al[e.action]||e.action)+'</td><td style="padding:5px 8px">'+escapeHTML(e.target)+'</td><td style="padding:5px 8px;color:var(--text-dim)">'+escapeHTML(e.ip)+'</td></tr>').join("")+'</tbody></table></div>';}catch(e){container.innerHTML='<div style="color:var(--red)">加载失败: '+escapeHTML(e.message)+'</div>';}}
 async function importBackup(input){const file=input.files[0];if(!file)return;const status=document.getElementById("backup-import-status");status.textContent="导入中…";try{const text=await file.text();await api("/api/backup/import",{method:"POST",body:text});status.style.color="var(--green)";status.textContent="✓ 导入成功，页面将刷新…";setTimeout(()=>location.reload(),1500);}catch(e){status.style.color="var(--red)";status.textContent="✗ 导入失败: "+e.message;}input.value="";}
 async function uninstallAll(){const c=prompt('确认操作：请输入 "UNINSTALL ALL"');if(c!=="UNINSTALL ALL"){alert("取消");return;}try{const r=await api("/api/uninstall-all",{method:"POST"});alert("已向 "+r.count+" 个节点发送卸载指令");}catch(e){alert("失败: "+e.message);}}
+async function submitMigrate(){
+  const srv=document.getElementById("migrate-server").value.trim();
+  const tok=document.getElementById("migrate-token").value.trim();
+  const status=document.getElementById("migrate-status");
+  if(!srv){alert("请填写新主控地址");return;}
+  if(!confirm("即将向所有在线节点广播迁移种子，被控将断开并连接新主控。确认继续？"))return;
+  status.style.color="var(--text-dim)";status.textContent="发送中…";
+  try{
+    const r=await api("/api/migrate",{method:"POST",body:JSON.stringify({new_server:srv,new_token:tok})});
+    status.style.color="var(--green)";
+    status.textContent="✓ 已向 "+r.sent+" 个节点发送"+(r.errors&&r.errors.length?" ("+r.errors.length+"个失败)":"");
+  }catch(e){status.style.color="var(--red)";status.textContent="✗ "+e.message;}
+}
 async function renamePanel(){if(!_loggedIn){toggleLoginPopup();return;}const cur=document.getElementById("panel-title").textContent;const next=prompt("修改面板标题（最多60字符）:",cur);if(next===null)return;const t=next.trim();if(t===cur)return;try{const r=await api("/api/config",{method:"PATCH",body:JSON.stringify({panel_title:t})});if(r&&r.panel_title){document.title=r.panel_title;document.getElementById("panel-title").textContent=r.panel_title;}}catch(e){alert("保存失败: "+e.message);}}
 
 // ===== Probe management =====

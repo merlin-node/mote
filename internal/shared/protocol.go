@@ -173,3 +173,14 @@ type ProbeResultPayload struct {
 	Timestamp int64             `json:"t"`
 	Items     []ProbeResultItem `json:"items"`
 }
+
+// MigrationPayload 主控 → 被控:要求切换到新主控
+// HMAC = hex(HMAC-SHA256(key=当前token, data=NewServer+"\n"+NewToken))
+// 被控验签通过后写新配置并断联重连。
+type MigrationPayload struct {
+	NewServer string `json:"new_server"` // wss://新主控
+	NewToken  string `json:"new_token"`  // 新 token(空串表示沿用 AD key)
+	HMAC      string `json:"hmac"`       // 防篡改签名
+}
+
+const ByeReasonMigration = "migration"

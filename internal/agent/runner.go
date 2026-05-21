@@ -2,6 +2,9 @@ package agent
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -418,6 +421,11 @@ func runOnce(rootCtx context.Context, cfg *Config, collector *Collector, probe *
 				default:
 				}
 			}
+		case shared.MsgTypeMigration:
+			if handleMigration(cfg, e.Payload) {
+				_ = writeEnvelopeSafe(writeMu, conn, shared.MsgTypeBye, shared.ByePayload{Reason: shared.ByeReasonMigration}, 3*time.Second)
+				cancel()
+			}
 		case shared.MsgTypeUninstall:
 			log.Println("received uninstall command, executing...")
 			_ = writeEnvelopeSafe(writeMu, conn, shared.MsgTypeBye, shared.ByePayload{Reason: shared.ByeReasonUninstall}, 3*time.Second)
@@ -463,6 +471,38 @@ func handleReconfig(cfg *Config, payload json.RawMessage, metricCh, hbCh chan<- 
 			log.Printf("reconfig: heartbeat channel full, dropped")
 		}
 	}
+}
+
+// handleMigration 验证迁移种子签名，通过后写入新配置并返回 true（触发断联重连）。
+func handleMigration(cfg *Config, payload json.RawMessage) bool {
+	var mp shared.MigrationPayload
+	if err := json.Unmarshal(payload, &mp); err != nil {
+		log.Printf("warn: parse migration payload: %v", err)
+		return false
+	}
+	if mp.NewServer == "" {
+		log.Printf("warn: migration: new_server is empty")
+		return false
+	}
+	// 验签：key=当前 token，data=new_server+"\n"+new_token
+	key := cfg.Token
+	mac := hmac.New(sha256.New, []byte(key))
+	mac.Write([]byte(mp.NewServer + "\n" + mp.NewToken))
+	expected := hex.EncodeToString(mac.Sum(nil))
+	if !hmac.Equal([]byte(expected), []byte(mp.HMAC)) {
+		log.Printf("warn: migration: HMAC mismatch, ignoring")
+		return false
+	}
+	log.Printf("migration: switching to %s", mp.NewServer)
+	cfg.mu.Lock()
+	cfg.Server = mp.NewServer
+	if mp.NewToken != "" {
+		cfg.Token = mp.NewToken
+		cfg.AutoDiscovery = ""
+	}
+	cfg.mu.Unlock()
+	_ = cfg.Save()
+	return true
 }
 
 // runProbes 对当前探针目标列表执行一次 ICMP/TCP 测量并上报结果

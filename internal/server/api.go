@@ -98,6 +98,7 @@ func (a *API) Routes() http.Handler {
 
 	// 全员卸载
 	mux.HandleFunc("/api/uninstall-all", a.handleUninstallAll)
+	mux.HandleFunc("/api/migrate", a.handleMigrate)
 
 	// 历史曲线（/api/nodes/{id}/history 已在 handleNodeOps 里路由）
 
@@ -1101,6 +1102,33 @@ func (a *API) handleUninstallAll(w http.ResponseWriter, r *http.Request) {
 	a.store.LogAudit(a.cfg.AdminUsername, r.RemoteAddr, "uninstall_all", "all",
 		fmt.Sprintf("sent to %d nodes", count))
 	writeJSONResp(w, map[string]any{"ok": true, "count": count})
+}
+
+// === 迁移种子 ===
+
+// handleMigrate 向所有在线节点广播迁移种子，要求被控切换到新主控
+func (a *API) handleMigrate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		NewServer string `json:"new_server"`
+		NewToken  string `json:"new_token"` // 可为空（对端用 AD key 时）
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad json", http.StatusBadRequest)
+		return
+	}
+	req.NewServer = strings.TrimSpace(req.NewServer)
+	if req.NewServer == "" {
+		http.Error(w, "new_server required", http.StatusBadRequest)
+		return
+	}
+	sent, errs := a.hub.BroadcastMigration(req.NewServer, strings.TrimSpace(req.NewToken))
+	a.store.LogAudit(a.cfg.AdminUsername, r.RemoteAddr, "migrate", "all",
+		fmt.Sprintf("new_server=%s sent=%d", req.NewServer, sent))
+	writeJSONResp(w, map[string]any{"ok": true, "sent": sent, "errors": errs})
 }
 
 // === 审计日志 ===

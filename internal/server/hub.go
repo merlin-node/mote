@@ -1,7 +1,11 @@
 package server
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -559,6 +563,36 @@ func (c *AgentConn) handleProbeResult(payload json.RawMessage) {
 			Success:   item.Success,
 		})
 	}
+}
+
+// BroadcastMigration 向所有在线节点广播迁移种子。
+// 针对每个节点用其自身 token 做 HMAC key，保证签名不可伪造。
+// 返回成功发出的节点数和各节点的错误描述。
+func (h *Hub) BroadcastMigration(newServer, newToken string) (sent int, errs []string) {
+	h.mu.RLock()
+	nodeIDs := make([]int64, 0, len(h.conns))
+	for id := range h.conns {
+		nodeIDs = append(nodeIDs, id)
+	}
+	h.mu.RUnlock()
+
+	for _, nodeID := range nodeIDs {
+		node, err := h.store.GetNode(nodeID)
+		if err != nil {
+			errs = append(errs, fmt.Sprintf("node#%d: get token: %v", nodeID, err))
+			continue
+		}
+		mac := hmac.New(sha256.New, []byte(node.Token))
+		mac.Write([]byte(newServer + "\n" + newToken))
+		sig := hex.EncodeToString(mac.Sum(nil))
+		p := shared.MigrationPayload{NewServer: newServer, NewToken: newToken, HMAC: sig}
+		if err := h.SendTo(nodeID, shared.MsgTypeMigration, p); err != nil {
+			errs = append(errs, fmt.Sprintf("node#%d: %v", nodeID, err))
+		} else {
+			sent++
+		}
+	}
+	return
 }
 
 // writeEnvelopeOnce 不加锁的单次写入(仅握手阶段使用)
