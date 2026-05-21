@@ -2,7 +2,7 @@
 
 ---
 
-# v2.4 一键更新 + 迁移种子 + 用户名修改（2026-05）
+# v2.4 一键更新 + 用户名修改 + 迁移种子（2026-05）
 
 ## `zk update` 一键更新 + 自动回滚
 
@@ -27,23 +27,63 @@
 `internal/server/api.go` 新增：
 - 路由 `POST /api/change-username`
 - 请求体：`{ "password": "<当前密码>", "new": "<新用户名>" }`
-- 验证：current password 正确 + 新用户名非空 + 长度 ≤ 64 字符（允许 `@`、`#` 等所有可打印字符）
+- 验证：current password 正确 + 新用户名非空 + 长度 ≤ 64 字符
 - 成功后更新 `cfg.AdminUsername`、写盘、`revokeAll()` 吊销所有 session（强制重新登录）
 
-前端（`internal/server/web/index.html`）设置弹窗新增"改用户名"区块（待下一步完成）。
+`internal/server/web/index.html` 设置弹窗 → 常规 Tab 底部新增"改用户名"区块：
+- 新用户名输入框 + 当前密码确认输入框 + 按钮
+- 改完自动登出（与改密码行为一致）
 
-## 迁移种子机制（待完成）
+## 迁移种子机制
 
-`internal/shared/protocol.go` 将新增 `MigrationPayload`（`new_url`、`fallback_after`、`hmac`）。
+批量将所有在线被控无缝迁移到新主控，被控自动断联并连接新地址，无需手动 reconfig。
 
-被控 `internal/agent/`:
-- `config.go` 新增 `MigrationURL`、`MigrationFallbackAfter` 字段
-- `runner.go` 收到 `migration` 消息后验证 HMAC → 写入 config；断联超时后自动切换新地址并清除迁移记录
+### 协议 `internal/shared/protocol.go`
 
-主控 `internal/server/`:
-- `hub.go` 新增 `BroadcastMigration(newURL string)`
-- `api.go` 新增 `POST /api/migrate`，需登录，body `{ "new_url": "wss://..." }`
-- 面板设置弹窗新增"迁移"入口
+新增 `MigrationPayload`：
+
+```go
+type MigrationPayload struct {
+    NewServer string `json:"new_server"` // wss://新主控
+    NewToken  string `json:"new_token"`  // 新 token（空串=沿用 AD key）
+    HMAC      string `json:"hmac"`       // hex(HMAC-SHA256(key=当前token, data=new_server+"\n"+new_token))
+}
+```
+
+新增常量 `ByeReasonMigration = "migration"`。
+
+### 被控 `internal/agent/runner.go`
+
+新增 `handleMigration(cfg, payload)` 函数：
+1. 解析 `MigrationPayload`
+2. 用 `crypto/hmac` + `crypto/sha256` 验签（key = 当前 `cfg.Token`）
+3. 签名不匹配则忽略，防止伪造迁移指令
+4. 验证通过后原子更新 `cfg.Server` / `cfg.Token`，调 `cfg.Save()` 写盘
+5. 向主控发 `bye{reason="migration"}` 后 `cancel()`，触发重连循环以新配置连接新主控
+
+读循环新增 `case shared.MsgTypeMigration`，调用上述函数。
+
+### 主控 `internal/server/hub.go`
+
+新增 `BroadcastMigration(newServer, newToken string) (sent int, errs []string)`：
+- 遍历所有在线节点，从 store 查各自 token
+- 每个节点独立计算 HMAC（key = 该节点 token），避免一个节点的签名被用于另一个节点
+- 通过 `SendTo` 投递 `MsgTypeMigration`，返回成功数与各节点错误列表
+
+### 主控 `internal/server/api.go`
+
+新增路由 `POST /api/migrate`：
+- 请求体：`{ "new_server": "wss://...", "new_token": "..." }`
+- `new_server` 必填，`new_token` 可为空（对端使用 AD key 时）
+- 调用 `BroadcastMigration`，写审计日志，返回 `{ ok, sent, errors }`
+
+### 前端 `internal/server/web/index.html`
+
+设置弹窗 → 危险操作 Tab 顶部新增"迁移主控"区块（在"全员卸载"之上）：
+- 新主控 WebSocket 地址输入框
+- 新 Token 输入框（可留空）
+- 广播按钮，含二次确认对话框
+- 内联状态提示（发送中 / ✓ 已向 N 个节点发送 / ✗ 错误信息）
 
 ---
 

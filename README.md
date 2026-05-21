@@ -1,7 +1,7 @@
 # mote — 极轻量服务器监控探针
 
 > 主控 `zk` + 被控 `bk`，类似 Komari / 哪吒，但更轻、更省心
-> 版本：v2.3 | GitHub: `merlin-node/mote`
+> 版本：v2.4 | GitHub: `merlin-node/mote`
 
 ## 特性
 
@@ -22,6 +22,9 @@
 - **移动端响应式**：断点 768px / 480px 双层适配，手机浏览器体验完整
 - **CLI 友好**：`zk` / `bk` 交互菜单，start / stop / restart / status / uninstall 一应俱全
 - **远程卸载**：网页一键下发，被控自动清理；支持全员卸载
+- **一键更新**：`zk update` 自动拉最新版，失败自动回滚旧二进制
+- **改用户名**：面板设置 → 常规，在线修改管理员用户名（需密码确认）
+- **迁移种子**：面板一键向所有在线被控广播新主控地址，HMAC-SHA256 验签，被控自动切换并重连
 
 ## 项目结构
 
@@ -93,8 +96,8 @@ curl -fsSL https://raw.githubusercontent.com/merlin-node/mote/main/docker-compos
 # 2. 放入被控二进制（主控用来分发给小鸡的安装脚本需要它）
 mkdir -p ./data/db/dist
 # 从 GitHub Releases 下载，或自行编译后 cp 过来
-curl -fsSL https://github.com/merlin-node/mote/releases/download/v2.2/bk-linux-amd64 -o ./data/db/dist/bk-linux-amd64
-curl -fsSL https://github.com/merlin-node/mote/releases/download/v2.2/bk-linux-arm64  -o ./data/db/dist/bk-linux-arm64
+curl -fsSL https://github.com/merlin-node/mote/releases/download/v2.4/bk-linux-amd64 -o ./data/db/dist/bk-linux-amd64
+curl -fsSL https://github.com/merlin-node/mote/releases/download/v2.4/bk-linux-arm64  -o ./data/db/dist/bk-linux-arm64
 chmod +x ./data/db/dist/bk-linux-*
 
 # 3. 启动
@@ -216,6 +219,7 @@ bash <(curl -fsSL https://panel.example.com/install-bk.sh) \
 | `zk` | 打开交互菜单 |
 | `zk status` | 健康检查（端口 / SQLite / 磁盘 / 可达性）|
 | `zk start/stop/restart` | 服务控制 |
+| `zk update` | 更新到最新版本（自动回滚保护）|
 | `zk uninstall` | 卸载主控 |
 | `zk version` | 版本 |
 
