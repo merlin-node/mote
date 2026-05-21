@@ -1,0 +1,42 @@
+name: Release Binaries
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Build binaries
+        run: |
+          mkdir -p dist
+          VERSION=${GITHUB_REF_NAME}
+          LDFLAGS="-s -w -X mote/internal/shared.Version=${VERSION}"
+
+          GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -o dist/zk-linux-amd64 ./cmd/zk
+          GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -o dist/bk-linux-amd64 ./cmd/bk
+          GOOS=linux GOARCH=arm64 go build -ldflags "$LDFLAGS" -o dist/zk-linux-arm64 ./cmd/zk
+          GOOS=linux GOARCH=arm64 go build -ldflags "$LDFLAGS" -o dist/bk-linux-arm64 ./cmd/bk
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/zk-linux-amd64
+            dist/zk-linux-arm64
+            dist/bk-linux-amd64
+            dist/bk-linux-arm64
+          generate_release_notes: true
